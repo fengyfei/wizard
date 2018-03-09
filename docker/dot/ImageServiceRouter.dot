@@ -1,0 +1,53 @@
+@startuml
+
+class imageRouter
+
+class Router {
+	+ Routes() []Route
+}
+
+class Backend {
+	imageBackend
+	importExportBackend
+	registryBackend
+}
+
+class Route {
+	+ Handler() httputils.APIFunc
+	+ Method() string
+	+ Path() string
+}
+
+class ImageService
+
+class imageBackend {
+	+ ImageDelete(imageRef string, force, prune bool) ([]types.ImageDeleteResponseItem, error)
+	+ ImageHistory(imageName string) ([]*image.HistoryResponseItem, error)
+	+ Images(imageFilters filters.Args, all bool, withExtraAttrs bool) ([]*types.ImageSummary, error)
+	+ LookupImage(name string) (*types.ImageInspect, error)
+	+ TagImage(imageName, repository, tag string) (string, error)
+	+ ImagesPrune(ctx context.Context, pruneFilters filters.Args) (*types.ImagesPruneReport, error)
+}
+
+class importExportBackend {
+	+ LoadImage(inTar io.ReadCloser, outStream io.Writer, quiet bool) error
+	+ ImportImage(src string, repository, platform string, tag string, msg string, inConfig io.ReadCloser, outStream io.Writer, changes []string) error
+	+ ExportImage(names []string, outStream io.Writer) error
+}
+
+class registryBackend {
+	+ PullImage(ctx context.Context, image, tag, platform string, metaHeaders map[string][]string, authConfig *types.AuthConfig, outStream io.Writer) error
+	+ PushImage(ctx context.Context, image, tag string, metaHeaders map[string][]string, authConfig *types.AuthConfig, outStream io.Writer) error
+	+ SearchRegistryForImages(ctx context.Context, filtersArgs string, term string, limit int, authConfig *types.AuthConfig, metaHeaders map[string][]string) (*registry.SearchResults, error)
+}
+
+imageRouter -up->Router: implements
+imageRouter -left->Route: []routes
+Route -down->ImageService: invoke method
+imageRouter -down->ImageService: backend
+ImageService -down-> Backend: implements
+Backend -left-> imageBackend
+Backend -right-> importExportBackend
+Backend -down-> registryBackend
+
+@end
