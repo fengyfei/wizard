@@ -1,0 +1,140 @@
+@startuml
+
+class ImageService {
+	+ eventsService             *daemonevents.Events
+	+ pruneRunning              int32
+	+ registryService           registry.Service
+	+ trustKey                  libtrust.PrivateKey
+}
+
+class containerStore {
+	+ First(container.StoreFilter) *container.Container
+	+ List() []*container.Container
+	+ Get(string) *container.Container
+}
+
+class memoryStore {
+	+ map[string]*Container
+	+ sync.RWMutex
+}
+
+ImageService -up-> memoryStore: containers
+memoryStore -up-|> containerStore: Implementation
+
+class metadata.Store {
+	+ Get(namespace string, key string) ([]byte, error)
+	+ Set(namespace, key string, value []byte) error
+	+ Delete(namespace, key string) error
+}
+
+class metadata.FSMetadataStore {
+	+ sync.RWMutex
+	+ basePath string
+}
+
+ImageService -up-> metadata.FSMetadataStore: distributionMetadataStore
+metadata.FSMetadataStore -up-|> metadata.Store
+
+class image.Store {
+	+ Create(config []byte) (ID, error)
+	+ Get(id ID) (*Image, error)
+	+ Delete(id ID) ([]layer.Metadata, error)
+	+ Search(partialID string) (ID, error)
+	+ SetParent(id ID, parent ID) error
+	+ GetParent(id ID) (ID, error)
+	+ SetLastUpdated(id ID) error
+	+ GetLastUpdated(id ID) (time.Time, error)
+	+ Children(id ID) []ID
+	+ Map() map[ID]*Image
+	+ Heads() map[ID]*Image
+}
+
+class image.store {
+	+ sync.RWMutex
+	+ map[string]LayerGetReleaser
+	+ map[ID]*imageMeta
+	+ StoreBackend
+	+ *digestset.Set
+}
+
+class image.LayerGetReleaser {
+	+ Get(layer.ChainID) (layer.Layer, error)
+	+ Release(layer.Layer) ([]layer.Metadata, error)
+}
+
+class image.StoreBackend {
+	+ Walk(f DigestWalkFunc) error
+	+ Get(id digest.Digest) ([]byte, error)
+	+ Set(data []byte) (digest.Digest, error)
+	+ Delete(id digest.Digest) error
+	+ SetMetadata(id digest.Digest, key string, data []byte) error
+	+ GetMetadata(id digest.Digest, key string) ([]byte, error)
+	+ DeleteMetadata(id digest.Digest, key string) error
+}
+
+class image.fs {
+	+ sync.RWMutex
+	+ root string
+}
+
+ImageService -down-> image.store: imageStore
+image.store -down-|> image.Store
+image.store -right-> image.fs: fs
+image.fs -down-|> image.StoreBackend
+
+class layer.Store {
+	+ Register(io.Reader, ChainID) (Layer, error)
+	+ Get(ChainID) (Layer, error)
+	+ Map() map[ChainID]Layer
+	+ Release(Layer) ([]Metadata, error)
+	+ CreateRWLayer(id string, parent ChainID, opts *CreateRWLayerOpts) (RWLayer, error)
+	+ GetRWLayer(id string) (RWLayer, error)
+	+ GetMountID(id string) (string, error)
+	+ ReleaseRWLayer(RWLayer) ([]Metadata, error)
+	+ Cleanup() error
+	+ DriverStatus() [][2]string
+	+ DriverName() string
+}
+
+ImageService -down-> layer.Store: layerStores map[string]layer.Store
+
+class reference.Store {
+	+ References(id digest.Digest) []reference.Named
+	+ ReferencesByName(ref reference.Named) []Association
+	+ AddTag(ref reference.Named, id digest.Digest, force bool) error
+	+ AddDigest(ref reference.Canonical, id digest.Digest, force bool) error
+	+ Delete(ref reference.Named) (bool, error)
+	+ Get(ref reference.Named) (digest.Digest, error)
+}
+
+class reference.store {
+	+ sync.RWMutex
+	+ jsonPath string
+	+ Repositories map[string]repository
+	+ referencesByIDCache map[digest.Digest]map[string]reference.Named
+}
+
+ImageService -up-> reference.store: referenceStore
+reference.store -up-|> reference.Store
+
+class xfer.LayerDownloadManager {
+	+ layerStores  map[string]layer.Store
+	+ waitDuration time.Duration
+}
+
+class xfer.LayerUploadManager {
+	+ TransferManager
+	+ waitDuration time.Duration
+}
+
+class xfer.TransferManager {
+	+ Transfer(key string, xferFunc DoFunc, progressOutput progress.Output) (Transfer, *Watcher)
+	+ SetConcurrency(concurrency int)
+}
+
+ImageService -down-> xfer.LayerDownloadManager: downloadManager
+xfer.LayerDownloadManager -down-> xfer.TransferManager: tm
+ImageService -down-> xfer.LayerUploadManager: uploadManager
+xfer.LayerUploadManager -down-> xfer.TransferManager: tm
+
+@enduml
