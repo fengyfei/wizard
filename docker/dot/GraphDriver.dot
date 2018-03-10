@@ -1,0 +1,114 @@
+@startuml
+
+class Daemon {
+	+ graphDrivers map[string]string
+}
+note right of Daemon: graphDrivers is a map from \noperation system to driver name
+
+class layer.Store {
+	+ Register(io.Reader, ChainID) (Layer, error)
+	+ Get(ChainID) (Layer, error)
+	+ Map() map[ChainID]Layer
+	+ Release(Layer) ([]Metadata, error)
+
+	+ CreateRWLayer(id string, parent ChainID, opts *CreateRWLayerOpts) (RWLayer, error)
+	+ GetRWLayer(id string) (RWLayer, error)
+	+ GetMountID(id string) (string, error)
+	+ ReleaseRWLayer(RWLayer) ([]Metadata, error)
+
+	+ Cleanup() error
+	+ DriverStatus() [][2]string
+	+ DriverName() string
+}
+
+class layer.layerStore {
+	+ store       MetadataStore
+	+ driver      graphdriver.Driver
+	+ useTarSplit bool
+
+	+ layerMap map[ChainID]*roLayer
+	+ layerL   sync.Mutex
+
+	+ mounts map[string]*mountedLayer
+	+ mountL sync.Mutex
+	+ os     string
+}
+
+class layer.MetadataStore {
+	+ StartTransaction() (MetadataTransaction, error)
+	+ GetSize(ChainID) (int64, error)
+	+ GetParent(ChainID) (ChainID, error)
+	+ GetDiffID(ChainID) (DiffID, error)
+	+ GetCacheID(ChainID) (string, error)
+	+ GetDescriptor(ChainID) (distribution.Descriptor, error)
+	+ getOS(ChainID) (string, error)
+	+ TarSplitReader(ChainID) (io.ReadCloser, error)
+	+ SetMountID(string, string) error
+	+ SetInitID(string, string) error
+	+ SetMountParent(string, ChainID) error
+	+ GetMountID(string) (string, error)
+	+ GetInitID(string) (string, error)
+	+ GetMountParent(string) (ChainID, error)
+	+ List() ([]ChainID, []string, error)
+	+ Remove(ChainID) error
+	+ RemoveMount(string) error
+}
+
+class layer.fileMetadataStore {
+	+ root string
+}
+
+class layer.MetadataTransaction {
+	+ SetSize(int64) error
+	+ SetParent(parent ChainID) error
+	+ SetDiffID(DiffID) error
+	+ SetCacheID(string) error
+	+ SetDescriptor(distribution.Descriptor) error
+	+ setOS(string) error
+	+ TarSplitWriter(compressInput bool) (io.WriteCloser, error)
+	+ Commit(ChainID) error
+	+ Cancel() error
+	+ String() string
+}
+
+class layer.fileMetadataTransaction {
+	+ ws    *ioutils.AtomicWriteSet
+}
+
+Daemon -down-> layer.layerStore: graph driver name returned by\nStore.DriverName method
+layer.layerStore -up-> layer.Store: implements
+layer.layerStore -right-> layer.fileMetadataStore: store
+layer.fileMetadataStore -left-> layer.MetadataStore: implements
+layer.MetadataStore -down-> layer.MetadataTransaction: StartTransaction returned value
+layer.fileMetadataStore -right-> layer.fileMetadataTransaction: StartTransaction returned value
+layer.fileMetadataTransaction -left-> layer.fileMetadataStore: referenced by store
+layer.fileMetadataTransaction -right-> layer.MetadataTransaction: implements
+
+class graphdriver.Driver
+
+class graphdriver.ProtoDriver {
+	+ String() string
+	+ CreateReadWrite(id, parent string, opts *CreateOpts) error
+	+ Create(id, parent string, opts *CreateOpts) error
+	+ Remove(id string) error
+	+ Get(id, mountLabel string) (fs containerfs.ContainerFS, err error)
+	+ Put(id string) error
+	+ Exists(id string) bool
+	+ Status() [][2]string
+	+ GetMetadata(id string) (map[string]string, error)
+	+ Cleanup() error
+}
+
+class graphdriver.DiffDriver {
+	+ Diff(id, parent string) (io.ReadCloser, error)
+	+ Changes(id, parent string) ([]archive.Change, error)
+	+ ApplyDiff(id, parent string, diff io.Reader) (size int64, err error)
+	+ DiffSize(id, parent string) (size int64, err error)
+}
+
+graphdriver.Driver -left-> graphdriver.ProtoDriver: contains
+graphdriver.Driver -right-> graphdriver.DiffDriver: contains
+
+layer.layerStore -down-> graphdriver.Driver
+
+@end
