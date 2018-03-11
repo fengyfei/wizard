@@ -1,0 +1,94 @@
+@startuml
+
+object walker {
+	+ dir1  string
+	+ dir2  string
+}
+
+object root1 {
+	+ mode uint32
+	+ uid  uint32
+	+ gid  uint32
+	+ rdev uint64
+	+ size int64
+	+ mtim syscall.Timespec
+}
+
+object root2 {
+	+ mode uint32
+	+ uid  uint32
+	+ gid  uint32
+	+ rdev uint64
+	+ size int64
+	+ mtim syscall.Timespec
+}
+
+object nil
+
+
+walker -right-> root1: root1 (type FileInfo)
+root1 -up-> nil: parent
+walker -left-> root2: root2 (type FileInfo)
+root2 -up->nil: parent
+
+object children1.1 {
+	+ mode uint32
+	+ uid  uint32
+	+ gid  uint32
+	+ rdev uint64
+	+ size int64
+	+ mtim syscall.Timespec
+}
+
+object children1.2 {
+	+ mode uint32
+	+ uid  uint32
+	+ gid  uint32
+	+ rdev uint64
+	+ size int64
+	+ mtim syscall.Timespec
+}
+
+object children1.3 {
+	+ mode uint32
+	+ uid  uint32
+	+ gid  uint32
+	+ rdev uint64
+	+ size int64
+	+ mtim syscall.Timespec
+}
+
+children1.1 -right-> children1.2
+children1.2 -right-> children1.3
+
+root1 -down-> children1.1: children
+
+children1.1 -up-> root1: parent
+children1.2 -up-> root1: parent
+children1.3 -up-> root1: parent
+
+object children1.1.1 {
+	+ mode uint32
+	+ uid  uint32
+	+ gid  uint32
+	+ rdev uint64
+	+ size int64
+	+ mtim syscall.Timespec
+}
+
+object children1.1.2 {
+	+ mode uint32
+	+ uid  uint32
+	+ gid  uint32
+	+ rdev uint64
+	+ size int64
+	+ mtim syscall.Timespec
+}
+
+children1.1.1 -right-> children1.1.2
+
+children1.1 -down-> children1.1.1: children
+
+children1.1.1 -up-> children1.1: parent
+children1.1.2 -up-> children1.1: parent
+@endurml
