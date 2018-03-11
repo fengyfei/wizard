@@ -1,0 +1,20 @@
+@startuml
+
+title "Pull Image Process"
+
+control "ImageServer" as service
+entity RegistryService
+entity digest
+entity distribution
+entity v2Puller
+
+service -> distribution: ParseNormalizedNamed
+distribution -> service: image reference
+service -> digest: Parse
+digest -> service: taged reference
+service -> distribution: Pull
+distribution -> RegistryService: ResolveRepository
+distribution -> RegistryService: LookupPullEndpoints
+distribution -> v2Puller: Pull
+
+@end
