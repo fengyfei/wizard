@@ -1,0 +1,28 @@
+@startuml
+
+class PluginGetter {
+	+ Get(name, capability string, mode int) (CompatPlugin, error)
+	+ GetAllByCap(capability string) ([]CompatPlugin, error)
+	+ GetAllManagedPluginsByCap(capability string) []CompatPlugin
+	+ Handle(capability string, callback func(string, *plugins.Client))
+}
+
+class CompatPlugin {
+	+ Client() *plugins.Client
+	+ Name() string
+	+ ScopedPath(string) string
+	+ IsV1() bool
+}
+
+class Client {
+	+ http           *http.Client
+	+ requestFactory transport.RequestFactory
+}
+
+class Server
+
+PluginGetter -right-> CompatPlugin: load
+CompatPlugin -down-> Client: Client
+Client -right-> Server: send request constructed\by requestFactory
+
+@end
