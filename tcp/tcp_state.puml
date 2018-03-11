@@ -1,0 +1,29 @@
+@startuml
+scale 800 width
+
+[*] --> CLOSED
+CLOSED --> LISTEN : open(p)
+CLOSED --> ESTABLISHED : (both sides) \n receive SYN \n send ACK + SYN
+CLOSED --> SYN_SENT : send SYN
+SYN_SENT --> CLOSED : timeout
+
+SYN_SENT --> ESTABLISHED : receive ACK + SYN \n send ACK
+LISTEN --> SYN_RCVD : receive SYN \n send ACK
+SYN_RCVD --> ESTABLISHED : receive ack
+
+SYN_RCVD --> LISTEN : receive RST
+
+ESTABLISHED --> CLOSE_WAIT : receive FIN \n send ACK
+CLOSE_WAIT --> LAST_ACK : send FIN
+LAST_ACK --> CLOSED : receive ACK
+
+ESTABLISHED --> FIN_WAIT_1 : send FIN
+FIN_WAIT_1 --> FIN_WAIT_2 : receive ACK
+FIN_WAIT_2 --> TIME_WAIT : (this will stay 2MSL)receive FIN \n send ACK
+
+ESTABLISHED --> CLOSING : (both sides) \n receive FIN \n send ACK
+CLOSING --> TIME_WAIT : receive ACK
+TIME_WAIT --> CLOSED
+
+
+@enduml
