@@ -1,0 +1,68 @@
+@startuml
+
+class v2Puller {
+	+ V2MetadataService metadata.V2MetadataService
+	+ endpoint          registry.APIEndpoint
+	+ repoInfo          *registry.RepositoryInfo
+	+ repo              distribution.Repository
+	+ confirmedV2 bool
+}
+
+note left of v2Puller: implements Puller
+
+class ImagePullConfig {
+	+ Schema2Types []string
+	+ OS string
+}
+
+class Config {
+	+ MetaHeaders map[string][]string
+	+ AuthConfig *types.AuthConfig
+	+ ProgressOutput progress.Output
+	+ ImageEventLogger func(id, name, action string)
+	+ ImageStore ImageConfigStore
+	+ RequireSchema2 bool
+}
+
+class LayerDownloadManager {
+	+ layerStores  map[string]layer.Store
+	+ tm           TransferManager
+	+ waitDuration time.Duration
+}
+
+v2Puller -right-> ImagePullConfig: config
+ImagePullConfig -down-> Config: Config
+ImagePullConfig -right-> LayerDownloadManager: DownloadManager
+note top of LayerDownloadManager: implements RootFSDownloadManager
+
+class DefaultService {
+	+ config *serviceConfig
+	+ mu     sync.Mutex
+}
+
+class FSMetadataStore {
+	+ sync.RWMutex
+	+ basePath string
+}
+
+class reference.store {
+	+ mu sync.RWMutex
+	+ jsonPath string
+	+ Repositories map[string]repository
+	+ referencesByIDCache map[digest.Digest]map[string]reference.Named
+}
+
+Config -down-> DefaultService: RegistryService
+Config -down-> FSMetadataStore: MetadataStore
+Config -down-> reference.store: ReferenceStore
+
+class ImageService
+
+ImageService .down.>v2Puller: creates
+ImageService .down.>DefaultService: RegistryService
+ImageService .down.>LayerDownloadManager: downloadManager
+ImageService .down.>FSMetadataStore: distributionMetadataStore
+ImageService .down.>reference.store : ReferenceStore
+
+
+@end
