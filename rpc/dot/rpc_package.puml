@@ -1,0 +1,69 @@
+@startuml
+
+package "net/rpc/server.go" #DDDDDD {
+    class rpc {
+        var DefaultServer
+        type methodType struct
+        type service struct
+        type Request struct
+        type Response struct
+        type Server struct
+        type ServerCodec interface
+        + Accept(lis net.Listener)
+        + Register(rcvr interface{}) error
+        + ServerConn(conn io.ReadWriteCloser)
+        + ServeCodec(codec ServerCodec)
+        + ServeRequest(codec ServerCodec) error
+        + HandleHTTP()
+    }
+
+    class server {
+        serviceMap sync.Map
+    	reqLock    sync.Mutex
+    	freeReq    *Request
+    	respLock   sync.Mutex
+    	freeResp   *Response
+        + Register(rcvr interface{}) error
+        + RegisterName(name string, rcvr interface{}) error
+        + register(rcvr interface{}, name string, useName bool) error
+        + sendResponse(sending *sync.Mutex, req *Request, reply interface{}, codec ServerCodec, errmsg string)
+        + ServeConn(conn io.ReadWriteCloser)
+        + ServeCodec(codec ServerCodec)
+        + ServeRequest(codec ServerCodec) error
+        + getRequest() *Request
+        + freeRequest(req *Request)
+        + getResponse() *Response
+        + freeResponse(resp *Response)
+        + readRequest(codec ServerCodec) (service *service, mtype *methodType, req *Request, argv, replyv reflect.Value, keepReading bool, err error)
+        + readRequestHeader(codec ServerCodec) (svc *service, mtype *methodType, req *Request, keepReading bool, err error)
+        + Accept(lis net.Listener)
+        + ServeHTTP(w http.ResponseWriter, req *http.Request)
+        + HandleHTTP(rpcPath, debugPath string)
+    }
+
+    class gobClientCodec {
+        rwc    io.ReadWriteCloser
+    	dec    *gob.Decoder
+    	enc    *gob.Encoder
+    	encBuf *bufio.Writer
+    	closed bool
+        + ReadRequestHeader(r *Request) error
+        + ReadRequestBody(body interface{}) error
+        + WriteResponse(r *Response, body interface{}) (err error)
+        + Close() error
+    }
+
+    class service {
+        name   string
+        rcvr   reflect.Value
+        typ    reflect.Type
+        method map[string]*methodType
+        + call(server *Server, sending *sync.Mutex, wg *sync.WaitGroup, mtype *methodType, req *Request, argv, replyv reflect.Value, codec ServerCodec)
+    }
+
+    gobClientCodec -up-> server: 服务端与客户端定义相同的编解码器来进行 requests 和 responses 的序列化工作
+    server -up-> rpc: server.go.rpc 的导出函数基本调用 DefaultServer 的函数
+    service -up-> server: server 的 ServeCodec 函数调用 service 的 call 方法来调取服务
+}
+
+@enduml
