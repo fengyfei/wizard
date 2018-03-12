@@ -6,6 +6,24 @@ class repository {
 	+ name    reference.Named
 }
 
+class URLBuilder {
+	+ root     *url.URL
+	+ router   *mux.Router
+	+ relative bool
+}
+
+class manifests {
+	+ name   reference.Named
+	+ client *http.Client
+	+ etags  map[string]string
+}
+
+class tags {
+	+ client  *http.Client
+	+ context context.Context
+	+ name    reference.Named
+}
+
 class transport {
 	+ mu     sync.Mutex
 	+ modReq map[*http.Request]*http.Request
@@ -23,6 +41,11 @@ class headerModifier {
 }
 
 repository -down-> http.Client: client
+repository -down-> URLBuilder: ub
+repository -down-> manifests: Manifests() returned, ManifestsService
+repository -down-> tags: Tags()
+manifests .down.> URLBuilder: ub
+tags .down.> URLBuilder: ub
 http.Client -down-> transport: Transport
 transport -up-> http.Transport: Base
 transport -down-> headerModifier: Modifiers, slice

@@ -349,7 +349,7 @@ func NewV2Repository(ctx context.Context, repoInfo *registry.RepositoryInfo, end
 
 设置完成后结构如下图：
 
-![reposity](./images/reposity.png)
+![reposity](./images/repository.png)
 
 在 pullV2Repository 中，根据 tag 下载对应镜像：
 
@@ -370,5 +370,219 @@ for _, tag := range tags {
 		return err
 	}
 	layersDownloaded = layersDownloaded || pulledNew
+}
+```
+
+继续看 pullV2Tag:
+
+```go
+// 获取 ManifestService
+manSvc, err := p.repo.Manifests(ctx)
+
+var (
+	manifest    distribution.Manifest
+	tagOrDigest string // Used for logging/progress only
+)
+// 通过 ManifestService 获取 manifest
+if digested, isDigested := ref.(reference.Canonical); isDigested {
+	manifest, err = manSvc.Get(ctx, digested.Digest())
+	// ...
+	tagOrDigest = digested.Digest().String()
+} else if tagged, isTagged := ref.(reference.NamedTagged); isTagged {
+	manifest, err = manSvc.Get(ctx, "", distribution.WithTag(tagged.Tag()))
+	// ...
+	tagOrDigest = tagged.Tag()
+}
+
+// ...
+
+// If manSvc.Get succeeded, we can be confident that the registry on
+// the other side speaks the v2 protocol.
+p.confirmedV2 = true
+
+var (
+	id             digest.Digest
+	manifestDigest digest.Digest
+)
+
+switch v := manifest.(type) {
+case *schema1.SignedManifest:
+	// ...
+	id, manifestDigest, err = p.pullSchema1(ctx, ref, v, os)
+	if err != nil {
+		return false, err
+	}
+case *schema2.DeserializedManifest:
+	id, manifestDigest, err = p.pullSchema2(ctx, ref, v, os)
+	if err != nil {
+		return false, err
+	}
+case *manifestlist.DeserializedManifestList:
+	id, manifestDigest, err = p.pullManifestList(ctx, ref, v, os)
+	if err != nil {
+		return false, err
+	}
+default:
+	return false, invalidManifestFormatError{}
+}
+	
+```
+
+可以看出， manSvc.Get 是后续分支判断的关键代码，我们需要进入：github.com/docker/distribution/registry/client/repository.go 查看详细代码。
+
+```go
+// manifest.Get
+for _, t := range distribution.ManifestMediaTypes() {
+	req.Header.Add("Accept", t)
+}
+
+if _, ok := ms.etags[digestOrTag]; ok {
+	req.Header.Set("If-None-Match", ms.etags[digestOrTag])
+}
+
+resp, err := ms.client.Do(req)
+// ...
+mt := resp.Header.Get("Content-Type")
+body, err := ioutil.ReadAll(resp.Body)
+// ...
+m, _, err := distribution.UnmarshalManifest(mt, body)
+// ...
+return m, nil
+```
+
+可以看出，Get 是一段 HTTP 请求代码，Manifest 文件，是由服务端提供的。
+
+看一下 UnmarshalManifest 方法：
+
+```go
+unmarshalFunc, ok := mappings[mediaType]
+
+return unmarshalFunc(p)
+```
+
+可以看出，mediaType 解码方法是提前注册的。
+
+进入 github.com/docker/distribution/manifest/schema2 可以找到注册代码：
+
+```go
+MediaTypeManifest = "application/vnd.docker.distribution.manifest.v2+json"
+
+schema2Func := func(b []byte) (distribution.Manifest, distribution.Descriptor, error) {
+	m := new(DeserializedManifest)
+	err := m.UnmarshalJSON(b)
+	if err != nil {
+		return nil, distribution.Descriptor{}, err
+	}
+
+	dgst := digest.FromBytes(b)
+	return m, distribution.Descriptor{Digest: dgst, Size: int64(len(b)), MediaType: MediaTypeManifest}, err
+}
+err := distribution.RegisterManifestSchema(MediaTypeManifest, schema2Func)
+```
+
+回到 pullV2Tag，switch 选择的应该是：
+
+```go
+case *schema2.DeserializedManifest:
+	id, manifestDigest, err = p.pullSchema2(ctx, ref, v, os)
+```
+
+pullSchema2 核心代码：
+
+```go
+func (p *v2Puller) pullSchema2(ctx context.Context, ref reference.Named, mfst *schema2.DeserializedManifest, requestedOS string) (id digest.Digest, manifestDigest digest.Digest, err error) {
+	manifestDigest, err = schema2ManifestDigest(ref, mfst)
+	// ...
+	target := mfst.Target()
+	// 镜像在本地已存在，不需要下载，直接返回结果
+	if _, err := p.config.ImageStore.Get(target.Digest); err == nil {
+		return target.Digest, manifestDigest, nil
+	}
+
+	var descriptors []xfer.DownloadDescriptor
+
+	// 构建需要下载的镜像层
+	for _, d := range mfst.Layers {
+		layerDescriptor := &v2LayerDescriptor{
+			digest:            d.Digest,
+			repo:              p.repo,
+			repoInfo:          p.repoInfo,
+			V2MetadataService: p.V2MetadataService,
+			src:               d,
+		}
+
+		descriptors = append(descriptors, layerDescriptor)
+	}
+	// ...
+	// 拉取镜像配置
+	go func() {
+		configJSON, err := p.pullSchema2Config(ctx, target.Digest)
+		// ...
+		configChan <- configJSON // 发送镜像配置文件
+	}()
+
+	var (
+		configJSON       []byte          // raw serialized image config
+		downloadedRootFS *image.RootFS   // rootFS from registered layers
+		configRootFS     *image.RootFS   // rootFS from configuration
+		release          func()          // release resources from rootFS download
+		configPlatform   *specs.Platform // for LCOW when registering downloaded layers
+	)
+
+	// ...
+
+  // 下载镜像
+	if p.config.DownloadManager != nil {
+		go func() {
+			var (
+				err    error
+				rootFS image.RootFS
+			)
+			downloadRootFS := *image.NewRootFS()
+			rootFS, release, err = p.config.DownloadManager.Download(ctx, downloadRootFS, requestedOS, descriptors, p.config.ProgressOutput)
+			if err != nil {
+				// Intentionally do not cancel the config download here
+				// as the error from config download (if there is one)
+				// is more interesting than the layer download error
+				layerErrChan <- err
+				return
+			}
+
+			downloadedRootFS = &rootFS
+			close(downloadsDone)
+		}()
+	} else {
+		// We have nothing to download
+		close(downloadsDone)
+	}
+
+	if configJSON == nil {
+		configJSON, configRootFS, _, err = receiveConfig(p.config.ImageStore, configChan, configErrChan)
+		// ...
+	}
+
+	// ...
+
+	if downloadedRootFS != nil {
+		// The DiffIDs returned in rootFS MUST match those in the config.
+		// Otherwise the image config could be referencing layers that aren't
+		// included in the manifest.
+		if len(downloadedRootFS.DiffIDs) != len(configRootFS.DiffIDs) {
+			return "", "", errRootFSMismatch
+		}
+
+		for i := range downloadedRootFS.DiffIDs {
+			if downloadedRootFS.DiffIDs[i] != configRootFS.DiffIDs[i] {
+				return "", "", errRootFSMismatch
+			}
+		}
+	}
+
+	imageID, err := p.config.ImageStore.Put(configJSON)
+	if err != nil {
+		return "", "", err
+	}
+
+	return imageID, manifestDigest, nil
 }
 ```
