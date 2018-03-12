@@ -40,7 +40,7 @@ class DefaultService {
 	+ mu     sync.Mutex
 }
 
-class FSMetadataStore {
+class metadata.FSMetadataStore {
 	+ sync.RWMutex
 	+ basePath string
 }
@@ -52,17 +52,51 @@ class reference.store {
 	+ referencesByIDCache map[digest.Digest]map[string]reference.Named
 }
 
+class imageConfigStore {
+	+ image.Store
+}
+
+class image.store {
+	+ sync.RWMutex
+	+ lss       map[string]LayerGetReleaser
+	+ images    map[ID]*imageMeta
+	+ digestSet *digestset.Set
+}
+
+class image.fs {
+	+ sync.RWMutex
+	+ root string
+}
+
+class layer.layerStore {
+	+ store       MetadataStore
+	+ driver      graphdriver.Driver
+	+ useTarSplit bool
+
+	+ layerMap map[ChainID]*roLayer
+	+ layerL   sync.Mutex
+
+	+ mounts map[string]*mountedLayer
+	+ mountL sync.Mutex
+	+ os     string
+}
+
 Config -down-> DefaultService: RegistryService
-Config -down-> FSMetadataStore: MetadataStore
+Config -down-> metadata.FSMetadataStore: MetadataStore
 Config -down-> reference.store: ReferenceStore
+Config -down-> imageConfigStore: ImageStore
+imageConfigStore -down-> image.store
+image.store -down-> image.fs: fs
+image.store -down-> layer.layerStore: lss map from os to layerStore
 
 class ImageService
 
 ImageService .down.>v2Puller: creates
 ImageService .down.>DefaultService: RegistryService
 ImageService .down.>LayerDownloadManager: downloadManager
-ImageService .down.>FSMetadataStore: distributionMetadataStore
+ImageService .down.>metadata.FSMetadataStore: distributionMetadataStore
 ImageService .down.>reference.store : ReferenceStore
-
+ImageService .down.>image.store : ImageStore
+ImageService .down.> layer.layerStore: LayerStores
 
 @end
