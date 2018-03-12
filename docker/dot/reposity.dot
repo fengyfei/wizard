@@ -1,0 +1,33 @@
+@startuml
+
+class repository {
+	+ ub      *v2.URLBuilder
+	+ context context.Context
+	+ name    reference.Named
+}
+
+class transport {
+	+ mu     sync.Mutex
+	+ modReq map[*http.Request]*http.Request
+}
+
+class http.Transport
+
+class net.Dialer
+class proxy.Dialer
+
+class http.Client
+
+class headerModifier {
+	+ ModifyRequest(*http.Request) error
+}
+
+repository -down-> http.Client: client
+http.Client -down-> transport: Transport
+transport -up-> http.Transport: Base
+transport -down-> headerModifier: Modifiers, slice
+http.Transport .down.> net.Dialer: Dial
+http.Transport .down.> proxy.Dialer: Dial
+proxy.Dialer .down.> net.Dialer: wraps
+
+@end
