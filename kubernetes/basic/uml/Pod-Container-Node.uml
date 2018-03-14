@@ -1,0 +1,37 @@
+@startuml
+
+rectangle Master
+
+rectangle Node1 {
+        rectangle Pod2 {
+        rectangle "container3"
+        rectangle "container2"
+    }
+
+    rectangle Pod1 {
+        rectangle "container1"
+    }
+}
+
+rectangle Node2 {
+    rectangle Pod4 {
+        rectangle "container1  "
+    }
+
+    rectangle Pod3 {
+        rectangle "container3 "
+        rectangle "container1 "
+    }
+}
+
+rectangle Node3 {
+    rectangle Pod5 {
+        rectangle "container4"
+    }
+}
+
+Master <-down--> Node1
+Master <-down--> Node2
+Master <-down--> Node3
+
+@enduml

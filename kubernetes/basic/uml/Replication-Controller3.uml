@@ -1,0 +1,40 @@
+@startuml
+
+rectangle Before {
+    rectangle "Node1" {
+        rectangle "Pod1" {
+            rectangle "redis-slave"
+        }
+    }
+
+    rectangle "Node2" {
+        rectangle "Pod2" {
+            rectangle "redis-slave "
+        }
+    }
+
+    rectangle "Node3" {
+    }
+}
+
+rectangle After {
+    rectangle "Node1 " {
+        rectangle "Pod1 " {
+            rectangle "redis-slave  "
+        }
+
+        rectangle "Pod2 " {
+            rectangle "redis-slave   "
+        }
+    }
+
+    rectangle "Node2 " {
+    }
+
+    rectangle "Node3 " {
+    }
+}
+
+Before ===> After
+
+@enduml

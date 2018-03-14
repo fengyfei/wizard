@@ -1,0 +1,28 @@
+@startuml
+
+rectangle Pod {
+    rectangle container2
+    rectangle container1
+    rectangle pause
+}
+
+interface Endponit [
+    Endponit (Pod IP + Container Port)
+]
+
+database Volume
+
+rectangle Event [
+    Event
+    ---
+    ...
+    ---
+    ...
+]
+
+Pod --> Volume
+Pod --> Event
+pause --> Endponit: Pod IP
+Pod --> Endponit: Container Port
+
+@enduml

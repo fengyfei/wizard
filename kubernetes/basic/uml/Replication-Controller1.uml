@@ -1,0 +1,27 @@
+@startuml
+
+rectangle Master {
+    rectangle RC [
+        Replication Controller
+    ]
+}
+
+rectangle Node1 {
+    rectangle Pod1 {
+        rectangle "redis-slave"
+    }
+}
+
+rectangle Node2 {
+    rectangle Pod2 {
+        rectangle "redis-slave "
+    }
+}
+
+rectangle Node3 {
+}
+
+RC =down=> Pod1
+RC =down=> Pod2
+
+@enduml
