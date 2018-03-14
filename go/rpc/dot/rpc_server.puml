@@ -18,10 +18,10 @@ package "net/rpc/server.go" #DDDDDD {
     }
 
     class server {
-        serviceMap sync.Map
-    	reqLock    sync.Mutex
+        serviceMap sync.Map // 服务对象集合
+    	reqLock    sync.Mutex // request 锁，保护 freeReq
     	freeReq    *Request
-    	respLock   sync.Mutex
+    	respLock   sync.Mutex // response 锁，保护 freeResp
     	freeResp   *Response
         + Register(rcvr interface{}) error
         + RegisterName(name string, rcvr interface{}) error
@@ -47,17 +47,17 @@ package "net/rpc/server.go" #DDDDDD {
     	enc    *gob.Encoder
     	encBuf *bufio.Writer
     	closed bool
-        + ReadRequestHeader(r *Request) error
+        + ReadRequestHeader(r *Request) error // 解码请求
         + ReadRequestBody(body interface{}) error
-        + WriteResponse(r *Response, body interface{}) (err error)
+        + WriteResponse(r *Response, body interface{}) (err error) // 编码响应
         + Close() error
     }
 
     class service {
-        name   string
-        rcvr   reflect.Value
-        typ    reflect.Type
-        method map[string]*methodType
+        name   string // 服务名
+        rcvr   reflect.Value // 服务中函数的接收者
+        typ    reflect.Type // 接收者类型
+        method map[string]*methodType // 已注册的函数集
         + call(server *Server, sending *sync.Mutex, wg *sync.WaitGroup, mtype *methodType, req *Request, argv, replyv reflect.Value, codec ServerCodec)
     }
 
