@@ -28,10 +28,6 @@ type Server struct {
 // Register 将会使用 log 包记录出现的 error
 // 客户端使用 "Type.Method" 的格式来调用函数，比如上文例子中 Arith.Multiply
 // 这里的 Type 是 receiver 的具体类型.
-func (server *Server) Register(rcvr interface{}) error {
-	return server.register(rcvr, "", false)
-}
-
 func (server *Server) register(rcvr interface{}, name string, useName bool) error {
 	...
 
@@ -48,66 +44,7 @@ func (server *Server) register(rcvr interface{}, name string, useName bool) erro
 	...
 }
 
-// suitableMethods 返回 typ 的符合条件的函数集
-// 如果 reportErr 为 true, 它会使用 log 包记录 error 日志
-func suitableMethods(typ reflect.Type, reportErr bool) map[string]*methodType {
-	methods := make(map[string]*methodType)
-	for m := 0; m < typ.NumMethod(); m++ {
-		method := typ.Method(m)
-		mtype := method.Type
-		mname := method.Name
-		// 函数必须是已导出的
-		if method.PkgPath != "" {
-			continue
-		}
-		// 函数需要三个元素: receiver, args, *reply.
-		if mtype.NumIn() != 3 {
-			if reportErr {
-				log.Printf("rpc.Register: method %q has %d input parameters; needs exactly three\n", mname, mtype.NumIn())
-			}
-			continue
-		}
-		// 第一个参数不必是指针类型
-		argType := mtype.In(1)
-		if !isExportedOrBuiltinType(argType) {
-			if reportErr {
-				log.Printf("rpc.Register: argument type of method %q is not exported: %q\n", mname, argType)
-			}
-			continue
-		}
-		// 第二个参数必须是指针类型
-		replyType := mtype.In(2)
-		if replyType.Kind() != reflect.Ptr {
-			if reportErr {
-				log.Printf("rpc.Register: reply type of method %q is not a pointer: %q\n", mname, replyType)
-			}
-			continue
-		}
-		if !isExportedOrBuiltinType(replyType) {
-			if reportErr {
-				log.Printf("rpc.Register: reply type of method %q is not exported: %q\n", mname, replyType)
-			}
-			continue
-		}
-		// Method 只需要一个类型为 typeOfError 的返回值
-		if mtype.NumOut() != 1 {
-			if reportErr {
-				log.Printf("rpc.Register: method %q has %d output parameters; needs exactly one\n", mname, mtype.NumOut())
-			}
-			continue
-		}
-		if returnType := mtype.Out(0); returnType != typeOfError {
-			if reportErr {
-				log.Printf("rpc.Register: return type of method %q is %q, must be error\n", mname, returnType)
-			}
-			continue
-		}
-		methods[mname] = &methodType{method: method, ArgType: argType, ReplyType: replyType}
-	}
-	return methods
-}
-
-// 客户端请求后，服务端通过 call 调用相应 服务
+// 客户端请求后，服务端通过 call 调用相应服务
 func (s *service) call(server *Server, sending *sync.Mutex, wg *sync.WaitGroup, mtype *methodType, req *Request, argv, replyv reflect.Value, codec ServerCodec) {
 	if wg != nil {
 		defer wg.Done()
@@ -116,9 +53,9 @@ func (s *service) call(server *Server, sending *sync.Mutex, wg *sync.WaitGroup, 
 	mtype.numCalls++
 	mtype.Unlock()
 	function := mtype.method.Func
-	// Invoke the method, providing a new value for the reply.
+	// 执行函数, 返回新的值给 reply
 	returnValues := function.Call([]reflect.Value{s.rcvr, argv, replyv})
-	// The return value for the method is an error.
+	// 返回值里的错误
 	errInter := returnValues[0].Interface()
 	errmsg := ""
 	if errInter != nil {
@@ -169,15 +106,6 @@ func (c *gobServerCodec) WriteResponse(r *Response, body interface{}) (err error
 	// *bufio.Writer.Flush() 将已 buffered 的数据写入内部的 io.writer
 }
 
-func (c *gobServerCodec) Close() error {
-	if c.closed {
-		// Only call c.rwc.Close once; otherwise the semantics are undefined.
-		return nil
-	}
-	c.closed = true
-	return c.rwc.Close()
-}
-
 // ServeConn 在一个单连接上运行 server
 // ServeConn 阻塞, 在服务该连接到客户端挂起的期间.
 // 一般另起线程来调用本函数，比如 `go server.ServeConn(conn)` (Accept 函数中有调用)
@@ -222,41 +150,6 @@ func (server *Server) ServeCodec(codec ServerCodec) {
 	wg.Wait()
 	codec.Close()
 }
-
-// ServeRequest 与 ServeCodec 类似但只会同步地服务单个 request
-// 它不会关闭 codec，即使在结束之后
-func (server *Server) ServeRequest(codec ServerCodec) error {...}
-
-// 获取头结点的 request
-func (server *Server) getRequest() *Request {
-	server.reqLock.Lock()
-	req := server.freeReq
-	if req == nil {
-		req = new(Request)
-	} else {
-		server.freeReq = req.next
-		*req = Request{}
-	}
-	server.reqLock.Unlock()
-	return req
-}
-
-// 将当前 req 插入到 freeReq 链表头部
-func (server *Server) freeRequest(req *Request) {
-	server.reqLock.Lock()
-	req.next = server.freeReq
-	server.freeReq = req
-	server.reqLock.Unlock()
-}
-
-// 与 request 同理
-func (server *Server) getResponse() *Response {...}
-
-func (server *Server) freeResponse(resp *Response) {...}
-
-func (server *Server) readRequest(codec ServerCodec) (service *service, mtype *methodType, req *Request, argv, replyv reflect.Value, keepReading bool, err error) {...}
-
-func (server *Server) readRequestHeader(codec ServerCodec) (svc *service, mtype *methodType, req *Request, keepReading bool, err error) {...}
 
 // Accept 从监听器上接收获取到的连接并服务每个连接的请求
 // Accept 阻塞直到监听器返回非空的错误
@@ -450,18 +343,6 @@ func Dial(network, address string) (*Client, error) {
 		return nil, err
 	}
 	return NewClient(conn), nil
-}
-
-// Close 调用编解码器含的 Close 函数. 如果连接已关闭则会返回 ErrShutdown
-func (client *Client) Close() error {
-	client.mutex.Lock()
-	if client.closing {
-		client.mutex.Unlock()
-		return ErrShutdown
-	}
-	client.closing = true
-	client.mutex.Unlock()
-	return client.codec.Close()
 }
 
 // Go 异步地执行函数. 本方法 Call 结构体类型指针的返回值代表该次远程调用. 
