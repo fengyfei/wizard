@@ -10,6 +10,6 @@
 * [TCP](tcp/index.md)
   * [TCPConn](tcp/tcp-conn.md)
 * [Go-Packages 源码阅读](go/index.md)
-  -   [database/sql](go/database-sql.md)
-  -   [rpc](go/rpc/go-packages-rpc.md)
+  * [database/sql](go/database-sql.md)
+  * [rpc](go/rpc/go-packages-rpc.md)
 

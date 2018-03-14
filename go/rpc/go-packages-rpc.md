@@ -852,14 +852,10 @@ func (client *Client) Call(serviceMethod string, args interface{}, reply interfa
 
 jsonrpc 主要将 gob 序列化工具换成 json 序列化工具，主要函数还是调用 server 里的 FuncWithCodec 函数，原理基本一致
 
-参考
+# References
 
-- Go RPC 开发指南 https://www.gitbook.com/book/smallnest/go-rpc-programming-guide/details
-
-- Go官方库RPC开发指南  http://colobu.com/2016/09/18/go-net-rpc-guide/
-
-- build-web-application-with-golang https://github.com/astaxie/build-web-application-with-golang/blob/master/zh/08.4.md
-
-- wikipedia https://en.wikipedia.org/wiki/Remote_procedure_call
-
-- How RPC Works https://technet.microsoft.com/en-us/library/cc738291%28v=ws.10%29.aspx?f=255&MSPPError=-2147217396
+- [Go RPC 开发指南](https://www.gitbook.com/book/smallnest/go-rpc-programming-guide/details)
+- [Go官方库RPC开发指南](http://colobu.com/2016/09/18/go-net-rpc-guide/)
+- [Build Web Application With Golang](https://github.com/astaxie/build-web-application-with-golang/blob/master/zh/08.4.md)
+- [Remote Procedure Call](https://en.wikipedia.org/wiki/Remote_procedure_call)
+- [How RPC Works](https://technet.microsoft.com/en-us/library/cc738291%28v=ws.10%29.aspx?f=255&MSPPError=-2147217396)
