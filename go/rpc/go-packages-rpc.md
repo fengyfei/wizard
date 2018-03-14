@@ -206,7 +206,7 @@ net/rpc 包不会再接受新特性，如果需要多语言支持或高可用性
 
 ### 1. rpc/server.go
 
-![image](https://raw.githubusercontent.com/fengyfei/wizard/d16dc5a4e3a33bdfd2b37175355a990d83a6f873/go/rpc/images/rpc_server.png?token=AXUDIxcqXswM3eg0vztZTMIPXt0w_ycuks5ascxzwA%3D%3D)
+![image](https://raw.githubusercontent.com/fengyfei/wizard/b340cd33f115c9bf41dd80bd8aee92c129191f53/go/rpc/images/rpc_server.png?token=AXUDI6eLePjfKv4GGm7-ZyJlpltPlVzDks5asd7bwA%3D%3D)
 
 ```go
 type methodType struct {
@@ -590,7 +590,7 @@ func HandleHTTP() { DefaultServer.HandleHTTP(DefaultRPCPath, DefaultDebugPath) }
 
 ### 2. rpc/client.go
 
-![image](https://raw.githubusercontent.com/fengyfei/wizard/d16dc5a4e3a33bdfd2b37175355a990d83a6f873/go/rpc/images/rpc_client.png?token=AXUDI0fDqAwTpP2P5Wc9JNY0bMSPMuzdks5ascxswA%3D%3D)
+![image](https://raw.githubusercontent.com/fengyfei/wizard/b340cd33f115c9bf41dd80bd8aee92c129191f53/go/rpc/images/rpc_client.png?token=AXUDI5t9jN7S-y8pQTFycid-jcWBAKtQks5asd5twA%3D%3D)
 
 ```go
 // ServerError 代表远程 RPC 连接返回的错误
