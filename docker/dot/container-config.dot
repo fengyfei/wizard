@@ -1,0 +1,58 @@
+@startuml
+
+class ContainerCreateConfig {
+	+ Name             string
+	+ AdjustCPUShares  bool
+}
+
+package "container" {
+	class Config
+	class HostConfig
+	class HealthConfig
+	class LogConfig
+	class NetworkMode
+	class RestartPolicy
+	class IpcMode
+	class CgroupSpec
+	class PidMode
+	class UTSMode
+	class Isolation
+	class UsernsMode
+	class Resources
+}
+
+package "network" {
+	class NetworkingConfig
+	class EndpointSettings
+	class EndpointIPAMConfig
+}
+
+package "nat" {
+	class PortSet
+	class PortMap
+}
+
+ContainerCreateConfig -down-> Config: Config
+ContainerCreateConfig -down-> HostConfig: HostConfig
+ContainerCreateConfig -down-> NetworkingConfig: NetworkingConfig
+
+Config -down-> PortSet: ExposedPorts
+Config -down-> HealthConfig: Healthcheck
+
+HostConfig -down-> LogConfig: LogConfig
+HostConfig -down-> NetworkMode: NetworkMode
+HostConfig -down-> PortMap: PortBindings
+HostConfig -down-> RestartPolicy: RestartPolicy
+HostConfig -down-> IpcMode: IpcMode
+HostConfig -down-> CgroupSpec: Cgroup
+HostConfig -down-> PidMode: PidMode
+HostConfig -down-> UTSMode: UTSMode
+HostConfig -down-> UsernsMode: UsernsMode
+HostConfig -down-> Isolation: Isolation
+HostConfig -down-> Resources
+
+NetworkingConfig -down-> EndpointSettings: map
+
+EndpointSettings -down-> EndpointIPAMConfig: IPAMConfig
+
+@end

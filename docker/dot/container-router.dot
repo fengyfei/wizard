@@ -1,0 +1,47 @@
+@startuml
+
+class containerRouter {
+	+ decoder httputils.ContainerDecoder
+	+ routes  []router.Route
+}
+
+class Daemon
+
+class Backend {
+	+ commitBackend
+	+ execBackend
+	+ copyBackend
+	+ stateBackend
+	+ monitorBackend
+	+ attachBackend
+	+ systemBackend
+}
+
+containerRouter -down-> Daemon: backend
+
+class commitBackend
+
+class execBackend
+
+class copyBackend
+
+class stateBackend
+
+class monitorBackend
+
+class attachBackend
+
+class systemBackend
+
+Daemon -down-> Backend: implements
+
+Backend -down-> commitBackend
+Backend -down-> execBackend
+Backend -down-> copyBackend
+Backend -down-> stateBackend
+Backend -down-> monitorBackend
+Backend -down-> attachBackend
+Backend -down-> systemBackend
+
+
+@end
