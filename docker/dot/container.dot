@@ -12,6 +12,25 @@ package "container" {
 		+ Pid               int
 	}
 	class Health
+	class attachContext {
+		+ ctx    context.Context
+		+ cancel context.CancelFunc
+		+ mu     sync.Mutex
+	}
+}
+
+class containertypes.Config
+class layer.Store
+class layer.RWLayer
+
+Container -down-> containertypes.Config: Config
+Container -down-> layer.Store: Driver Name
+Container -down-> layer.RWLayer: RWLayer
+layer.Store .right.> layer.RWLayer: CreateRWLayer
+
+class exec.Store {
+	+ byID map[string]*Config
+	+ sync.RWMutex
 }
 
 class stream.Config
@@ -36,6 +55,8 @@ package "network" {
 
 Container -left-> State: State
 State -left-> Health: Health
+Container -right-> attachContext: attachContext
+Container -down-> exec.Store: ExecCommands
 Container -down-> stream.Config: StreamConfig
 Container -down-> Settings: NetworkSettings
 

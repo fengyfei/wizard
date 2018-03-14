@@ -14,11 +14,11 @@ routers := []router.Router{
 
 ```go
 return routerOptions{
-		sessionManager: sm,
-		buildBackend:   bb,
-		buildCache:     buildCache,
-		daemon:         daemon,
-	}, nil
+	sessionManager: sm,
+	buildBackend:   bb,
+	buildCache:     buildCache,
+	daemon:         daemon,
+}, nil
 ```
 
 可以看出，dockerd 本身就是 Container 服务提供者。整体结构如下：
@@ -160,6 +160,22 @@ if err != nil {
 container.RWLayer = rwLayer
 ```
 
+记录容器关联：
+
+```go
+if err := daemon.setHostConfig(container, params.HostConfig); err != nil {
+	return nil, err
+}
+```
+
+与 Host 操作系统相关的设置：
+
+```go
+if err := daemon.createContainerOSSpecificSettings(container, params.Config, params.HostConfig); err != nil {
+	return nil, err
+}
+```
+
 创建容器网络：
 
 ```go
@@ -177,6 +193,122 @@ dockerd 进程更新容器状态：
 ```go
 stateCtr.set(container.ID, "stopped")
 daemon.LogContainerEvent(container, "create")
+```
+
+创建完毕后，Container 包含以下内容：
+
+![Container](./images/container.png)
+
+### 运行容器
+
+运行容器的入口方法为：
+
+```go
+func (daemon *Daemon) ContainerStart(name string, hostConfig *containertypes.HostConfig, checkpoint string, checkpointDir string) error
+```
+
+具体执行过程为，首先通过 ID 或 容器名获取对应的容器：
+
+```go
+container, err := daemon.GetContainer(name)
+```
+
+然后，检查容器的当前状态是否满足运行条件：
+
+```go
+validateState := func() error {
+	container.Lock()
+	defer container.Unlock()
+
+	// 暂停状态，不能运行
+	if container.Paused {
+		return errdefs.Conflict(errors.New("cannot start a paused container, try unpause instead"))
+	}
+
+	// 已经为运行状态
+	if container.Running {
+		return containerNotModifiedError{running: true}
+	}
+
+	// 容器已标记为删除，不能运行
+	if container.RemovalInProgress || container.Dead {
+		return errdefs.Conflict(errors.New("container is marked for removal and cannot be started"))
+	}
+	return nil
+}
+
+if err := validateState(); err != nil {
+	return err
+}
+```
+
+检查容器的设置：
+
+```go
+if _, err = daemon.verifyContainerSettings(container.OS, container.HostConfig, nil, false); err != nil {
+	return errdefs.InvalidParameter(err)
+}
+```
+
+前序状态、配置检查完毕后，进入容器执行代码：
+
+```go
+func (daemon *Daemon) containerStart(container *container.Container, checkpoint string, checkpointDir string, resetRestartManager bool) (err error)
+```
+
+根据是否基于 hyper-v 来决定是否 mount 容器文件系统：
+
+```go
+if err := daemon.conditionalMountOnStart(container); err != nil {
+	return err
+}
+```
+
+初始化容器网络：
+
+```go
+if err := daemon.initializeNetworking(container); err != nil {
+	return err
+}
+```
+
+创建 spec 配置：
+
+```go
+spec, err := daemon.createSpec(container)
+```
+
+获取 containerd 配置：
+
+```go
+createOptions, err := daemon.getLibcontainerdCreateOptions(container)
+```
+
+创建容器：
+
+```go
+err = daemon.containerd.Create(context.Background(), container.ID, spec, createOptions)
+```
+
+启动容器：
+
+```go
+pid, err := daemon.containerd.Start(context.Background(), container.ID, checkpointDir,
+	container.StreamConfig.Stdin() != nil || container.Config.Tty,
+	container.InitializeStdio)
+```
+
+设置容器 PID，修改容器运行状态：
+
+```go
+container.SetRunning(pid, true)
+```
+
+dockerd 修改容器运行状态，并开启健康检查：
+
+```go
+daemon.setStateCounter(container)
+daemon.initHealthMonitor(container)
 ```
 
 ## References
