@@ -17,7 +17,7 @@
   * [TCPConn](tcp/tcp-conn.md)
 * [Go-Packages 源码阅读](go/index.md)
   * [database/sql](go/database-sql.md)
-  * [rpc](go/rpc/go-packages-rpc.md)
+  * [net/rpc](go/rpc/net-rpc.md)
 * [kubernetes](kubernetes/index.md)
   * [Master and Node](kubernetes/basic/Master-and-Node.md)
   * [Pod](kubernetes/basic/Pod.md)
