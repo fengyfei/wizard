@@ -16,7 +16,7 @@ Label 是 Kubernetes 系统中另外一个核心概念。一个 Label 是一个 
 
 Label Selector 可以被类比为 SQL 语句中的 where 查询条件，例如，name=redis-slave 这个 Label Selector 作用于 Pod 时，可以被类比为 select * from pod where pod’s name = 'redis-slave' 这样的语句。当前有两种 Label Selector 的表达式：基于等式的（Equality-based）和基于集合的 (Set-based)，釆用“等式类”表达式匹配标签的例子：name=redis-slave，env!=production，使用集合操作的表达式例子：name in (redis-master, redis-slave)，name not in (php-frontend)，多个条件使用 “,” 号连接。（注：name in (redis-master, redis-slave) 表示 匹配所有具有标签 name=redis-master 或者 name=redis-slave 的资源对象）
 
-Label Selector 在 Kubemetes 中的重要使用场景有以下几处。
+Label Selector 在 Kubernetes 中的重要使用场景有以下几处。
 
 * kube-controller 进程通过资源对象 RC 上定义的 Label Selector 来筛选要监控的 Pod 副本的数量，从而实现 Pod 副本的数量始终符合预期设定的全自动控制流程。
 * kube-proxy 进程通过 Service 的 Label Selector 来选择对应的 Pod，自动建立起每个 Service 到对应 Pod 的请求转发路由表，从而实现 Service 的智能负载均衡机制。

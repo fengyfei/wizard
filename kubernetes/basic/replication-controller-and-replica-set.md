@@ -2,21 +2,21 @@
 
 ## Replication Controller
 
-RC 是 Kubemetes 系统中的核心概念之一，简单来说，它其实是定义了一个期望的场景，即声明某种 Pod 的副本数量在任意时刻都符合某个预期值，所以 RC 的定义包括如下几个部分。
+RC 是 Kubernetes 系统中的核心概念之一，简单来说，它其实是定义了一个期望的场景，即声明某种 Pod 的副本数量在任意时刻都符合某个预期值，所以 RC 的定义包括如下几个部分。
 
 * Pod 期待的副本数（replicas)。
 * 用于筛选目标 Pod 的 Label Selector。
 * 当 Pod 的副本数量小于预期数量的时候，用于创建新 Pod 的 Pod 模板（template）。
 
-当我们定义了一个 RC 并提交到 Kubemetes 集群中以后，Master 节点上的 Controller Manager 组件就得到通知，定期巡检系统中当前存活的目标 Pod，并确保目标 Pod 实例的数量刚好等于此 RC 的期望值，如果有过多的 Pod 副本在运行，系统就会停掉一些 Pod，否则系统就会再自动创建一些 Pod。可以说，通过 RC，Kubemetes 实现了用户应用集群的高可用性，并且大大减少了系统管理员在传统 IT 环境中需要完成的许多手工运维工作（如主机监控脚本、应用监控脚本、故障恢复脚本等）。
+当我们定义了一个 RC 并提交到 Kubernetes 集群中以后，Master 节点上的 Controller Manager 组件就得到通知，定期巡检系统中当前存活的目标 Pod，并确保目标 Pod 实例的数量刚好等于此 RC 的期望值，如果有过多的 Pod 副本在运行，系统就会停掉一些 Pod，否则系统就会再自动创建一些 Pod。可以说，通过 RC，Kubernetes 实现了用户应用集群的高可用性，并且大大减少了系统管理员在传统 IT 环境中需要完成的许多手工运维工作（如主机监控脚本、应用监控脚本、故障恢复脚本等）。
 
 举一个例子，一个 3 个 Node 节点的集群，RC 里定义 redis-slave 这个 Pod 需要保持 2 个副本，系统将可能在其中的两个 Node 上创建 Pod。
 
-![Replication Controller 1](images/Replication-Controller1.png "Replication Controller 1")
+![Replication Controller Create](images/replication-controller-create.png)
 
 假设 Node2 上的 Pod2 意外终止，根据 RC 定义的 replicas 数量 2，Kubernetes 将会自动创建并启动一个新的 Pod，以保证整个集群中始终有两个 redis-slave Pod 在运行。系统可能选择 Node3 或者 Node1 来创建一个新的 Pod。
 
-|![Replication Controller 2](images/Replication-Controller2.png "Replication Controller 2")|or|![Replication Controller 3](images/Replication-Controller3.png "Replication Controller 3")|
+|![Replication Controller Move 1](images/replication-controller-move-1.png)|or|![Replication Controller Move 2](images/replication-controller-move-2.png)|
 | --- | --- | --- |
 
 在运行时，我们可以通过使用 `kubectl scale` 命令修改 RC 的副本数量，来实现 Pod 的动态缩放（Scaling) 功能，例如：`kubectl scale rc redis-slave --replicas=3`

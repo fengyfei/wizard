@@ -1,6 +1,6 @@
 # Deployment
 
-Deployment 是 Kubemetes 1.2 引入的概念，引入的目的是为了更好地解决 Pod 的编排问题。为此，Deployment 在内部使用了 Replica Set 来实现目的，无论从 Deployment 的作用与目的、它的 YAML 定义，还是从它的具体命令行操作来看，我们都可以把它看作 RC 的一次升级， 两者的相似度超过90%。
+Deployment 是 Kubernetes 1.2 引入的概念，引入的目的是为了更好地解决 Pod 的编排问题。为此，Deployment 在内部使用了 Replica Set 来实现目的，无论从 Deployment 的作用与目的、它的 YAML 定义，还是从它的具体命令行操作来看，我们都可以把它看作 RC 的一次升级， 两者的相似度超过90%。
 
 Deployment 相对于 RC 的一个最大升级是我们可以随时知道当前 Pod “部署”的进度。实际上由于一个 Pod 的创建、调度、绑定节点及在目标 Node 上启动对应的容器这一完整过程需要一定的时间，所以我们期待系统启动 N 个 Pod 副本的目标状态，实际上是一个连续变化的“部署过程”导致的最终状态。
 
