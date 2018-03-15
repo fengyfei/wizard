@@ -11,7 +11,6 @@
     * [Driver](docker/network/driver.md)
     * [Store](docker/network/store.md)
     * [Bridge](docker/network/bridge.md)
-    * [Host](docker/network/host.md)
     * [Overlay](docker/network/overlay.md)
     * [Remote](docker/network/remote.md)
 * [TCP](tcp/index.md)
