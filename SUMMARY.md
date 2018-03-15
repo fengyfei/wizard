@@ -9,6 +9,7 @@
   * [Container Management](docker/container-management.md)
   * [Networking](docker/network/index.md)
     * [Driver](docker/network/driver.md)
+    * [Store](docker/network/store.md)
     * [Bridge](docker/network/bridge.md)
     * [Host](docker/network/host.md)
     * [Overlay](docker/network/overlay.md)

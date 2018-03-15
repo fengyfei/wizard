@@ -1,0 +1,16 @@
+@startuml
+
+class controller
+class DrvRegistry
+class driverData
+class ipamTable
+class PluginGetter
+
+note top of PluginGetter: handle remote drivers
+
+controller -down-> DrvRegistry: drvRegistry
+DrvRegistry -down-> driverData: drivers map[string]*driverData
+DrvRegistry -down-> ipamTable: ipamDrivers
+DrvRegistry -down-> PluginGetter: pluginGetter
+
+@end
