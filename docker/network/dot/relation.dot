@@ -1,0 +1,13 @@
+@startuml
+
+class Daemon
+class NetworkController
+class Network
+class Sandbox
+
+Daemon .down.-> NetworkController: Create
+NetworkController .down.-> Network: Create
+NetworkController .right.> Sandbox: CreateSandbox
+Network .right.> Sandbox: CreateEndpoint
+Sandbox .left.> Network: Join
+@end
