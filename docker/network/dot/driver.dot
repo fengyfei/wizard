@@ -5,6 +5,9 @@ class DrvRegistry
 class driverData
 class ipamTable
 class PluginGetter
+class bridgeDriver
+class nullDriver
+class hostDriver
 
 note top of PluginGetter: handle remote drivers
 
@@ -12,5 +15,9 @@ controller -down-> DrvRegistry: drvRegistry
 DrvRegistry -down-> driverData: drivers map[string]*driverData
 DrvRegistry -down-> ipamTable: ipamDrivers
 DrvRegistry -down-> PluginGetter: pluginGetter
+
+driverData .down.> bridgeDriver: bridge
+driverData .down.> nullDriver: null
+driverData .down.> hostDriver: host
 
 @end
