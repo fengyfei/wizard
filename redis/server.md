@@ -223,6 +223,12 @@ latencyMonitorInit()
 bioInit()
 ```
 
+启动 Event Loop
+
+```C
+aeMain(server.el);
+```
+
 ### 关键代码
 
 - Linux 后台运行代码
