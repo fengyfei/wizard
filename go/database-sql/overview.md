@@ -1,55 +1,3 @@
-# database/sql
-
-Go 标准库中的一个包，用于和 SQL 或 SQL-Like 数据库通讯。该包提供的是抽象概念，具体数据库的实现，由驱动来做，这样就可以方便的更换数据库。
-
----
-
-##简单例子
-
-```go
-package main
-
-import (
-	"database/sql"
-    "fmt"
-	"log"
-
-	_ "github.com/go-sql-driver/mysql"
-)
-
-func main() {
-	db, err := sql.Open("mysql", "user:password@/dbName")  // 创建数据库实例
-	if err != nil {
-		panic(err)
-	}
-
-	defer db.Close()
-
-    if err = db.Ping(); err != nil {    // Ping: 判断实例是否可用
-		log.Fatal(err)
-	}
-
-    rows, err := db.Query("SELECT name FROM tableName")    // Query: 查询功能
-	if err != nil {
-		log.Fatal("Query error: ", err)
-	}
-
-	for rows.Next() {
-		var name string
-        if err := rows.Scan(&name); err != nil {    // Scan: 判断值是否存在，存在将其存入 name 中
-			log.Fatal("Scan error: ", err)
-		}
-		fmt.Println(name)
-	}
-	if err := rows.Err(); err != nil {
-		log.Fatal(err)
-	}
-}
-
-```
-
----
-
 ##Variables
 
 -   **ErrConnDone**
@@ -124,10 +72,10 @@ func (ci *ColumnType) ScanType() reflect.Type
 
 **表示单个数据库连接，而非池**
 
-**必须调用 Close 将此连接归还给连接池，在此之后，在此连接上的任何操作都会返回错误——ErrConnDone**
+**必须调用 Close 将此连接归还给连接池，在此之后，在此连接上的任何操作都会返回错误 ErrConnDone**
 
 ```go
-// 启动一个事务，提供的 context 在该事务提交或回滚前一直会被使用，如果该 context 被取消，该事务将会回滚，Tx.Commit 将会返回一个错误
+// 启动一个事务，提供的 context 在该事务提交或回滚前一直会被使用，如果该 context 被删去，该事务将会回滚，Tx.Commit 将会返回一个错误
 func (c *Conn) BeginTx(ctx context.Context, opts *TxOptions) (*Tx, error)
 ```
 
@@ -157,7 +105,7 @@ func (c *Conn) QueryContext(ctx context.Context, query string, args ...interface
 ```
 
 ```go
-// 执行查询只返回第一个结果，若无结果，*Row's Scan 将会返回错误——ErrNoRows
+// 执行查询只返回第一个结果，若无结果，*Row's Scan 将会返回错误 ErrNoRows
 func (c *Conn) QueryRowContext(ctx context.Context, query string, args ...interface{}) *Row
 ```
 
@@ -166,86 +114,107 @@ func (c *Conn) QueryRowContext(ctx context.Context, query string, args ...interf
 **代表了一个数据库。这点和很多其他语言不同，它并不代表一个到数据库的具体连接，而是一个能操作的数据库对象，具体的连接在内部通过连接池来管理，对外不暴露。每一次数据库操作，都产生一个 sql.DB 实例，操作完 Close**
 
 ```go
+// 以数据库驱动名和数据源为参数，返回一个数据库实例，驱动得另外导入，此方法应只调用一次
 func Open(driverName, dataSourceName string) (*DB, error)
 ```
 
 ```go
+// 以一个连接为参数，返回数据库实例
 func OpenDB(c driver.Connector) *DB
 ```
 
 ```go
+// 启动一个事务，默认的隔离级别取决于驱动
 func (db *DB) Begin() (*Tx, error)
 ```
 
 ```go
+// 启动一个事务，所使用的 context 将会一直被使用直到该事务提交或回滚，如果 context 被删去，该事务将回滚，Tx.Commit 方法将会返回错误
 func (db *DB) BeginTx(ctx context.Context, opts *TxOptions) (*Tx, error)
 ```
 
 ```go
+// 关闭数据库，释放资源(很少使用)
 func (db *DB) Close() error
 ```
 
 ```go
+// 返回一个单一的连接，在连接返还或 context 被删去前，它将会一直阻塞，每个连接在使用完后必须调用 Conn.Close 方法将其归还给连接池
 func (db *DB) Conn(ctx context.Context) (*Conn, error)
 ```
 
 ```go
+// 返回数据库的驱动
 func (db *DB) Driver() driver.Driver
 ```
 
 ```go
+// 执行查询，不返回任何结果
 func (db *DB) Exec(query string, args ...interface{}) (Result, error)
 ```
 
 ```go
+// 同上
 func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (Result, error)
 ```
 
 ```go
+// 判断一个数据库连接是否可用，如果有必要则建立连接
 func (db *DB) Ping() error
 ```
 
 ```go
+// 同上
 func (db *DB) PingContext(ctx context.Context) error
 ```
 
 ```go
+// 为之后的查询和执行创造 statement，当该 statement 不再使用时必须调用它的 Close 方法
 func (db *DB) Prepare(query string) (*Stmt, error)
 ```
 
 ```go
+// 同上
 func (db *DB) PrepareContext(ctx context.Context, query string) (*Stmt, error)
 ```
 
 ```go
+// 执行查询返回结果，同等于 SELECT
 func (db *DB) Query(query string, args ...interface{}) (*Rows, error)
 ```
 
 ```go
+// 同上
 func (db *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*Rows, error)
 ```
 
 ```go
+// 执行查询只返回第一个结果，若无结果，*Row's Scan 将会返回错误 ErrNoRows
 func (db *DB) QueryRow(query string, args ...interface{}) *Row
 ```
 
 ```go
+// 执行查询只返回第一个结果，若无结果，*Row's Scan 将会返回错误 ErrNoRows
 func (db *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *Row
 ```
 
 ```go
+// 设置一个连接被重用的最大时间，若 d <= 0，将会一直被重用
 func (db *DB) SetConnMaxLifetime(d time.Duration)
 ```
 
 ```go
+// 设置连接池中闲置连接的最大数量，若 0 < MaxOpenConns < MaxIdleConns，MaxIdleConns 将会减少至与 MaxOpenConns 相等，若 n <= 0，没有闲置连接会被保留
 func (db *DB) SetMaxIdleConns(n int)
 ```
 
 ```go
+// 设置数据库连接的最大数量，若 n <= 0，该数量将没有限制
 func (db *DB) SetMaxOpenConns(n int)
 ```
 
 ```go
+// 返回数据库的统计资料
 func (db *DB) Stats() DBStats
 ```
 
@@ -254,6 +223,7 @@ func (db *DB) Stats() DBStats
 **一行结果**
 
 ```go
+// 将匹配到的第一个数据传给 dest，如果没有匹配的数据，返回错误 ErrNoRows
 func (r *Row) Scan(dest ...interface{}) error
 ```
 
@@ -262,22 +232,27 @@ func (r *Row) Scan(dest ...interface{}) error
 **多行结果**
 
 ```go
+// 关闭 Rows，防止进一步的枚举
 func (rs *Rows) Close() error
 ```
 
 ```go
+// 返回列的信息，如：类型、长度、是否为空
 func (rs *Rows) ColumnTypes() ([]*ColumnType, error)
 ```
 
 ```go
+// 返回列名，当 Rows 关闭时返回错误
 func (rs *Rows) Columns() ([]string, error)
 ```
 
 ```go
+// 返回错误
 func (rs *Rows) Err() error
 ```
 
 ```go
+// 判断是否还存在下一个数据
 func (rs *Rows) Next() bool
 ```
 
@@ -324,3 +299,51 @@ func (s *Stmt) QueryRowContext(ctx context.Context, args ...interface{}) *Row
 ### Tx
 
 **带有特定属性的一个事务**
+
+```go
+func (tx *Tx) Commit() error
+```
+
+```go
+func (tx *Tx) Exec(query string, args ...interface{}) (Result, error)
+```
+
+```go
+func (tx *Tx) ExecContext(ctx context.Context, query string, args ...interface{}) (Result, error)
+```
+
+```go
+func (tx *Tx) Prepare(query string) (*Stmt, error)
+```
+
+```go
+func (tx *Tx) PrepareContext(ctx context.Context, query string) (*Stmt, error)
+```
+
+```go
+func (tx *Tx) Query(query string, args ...interface{}) (*Rows, error)
+```
+
+```go
+func (tx *Tx) QueryContext(ctx context.Context, query string, args ...interface{}) (*Rows, error)
+```
+
+```go
+func (tx *Tx) QueryRow(query string, args ...interface{}) *Row
+```
+
+```go
+func (tx *Tx) QueryRowContext(ctx context.Context, query string, args ...interface{}) *Row
+```
+
+```go
+func (tx *Tx) Rollback() error
+```
+
+```go
+func (tx *Tx) Stmt(stmt *Stmt) *Stmt
+```
+
+```go
+func (tx *Tx) StmtContext(ctx context.Context, stmt *Stmt) *Stmt
+```
