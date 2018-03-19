@@ -17,6 +17,8 @@ ESTABLISHED --> CLOSE_WAIT : receive FIN \n send ACK
 CLOSE_WAIT --> LAST_ACK : send FIN
 LAST_ACK --> CLOSED : receive ACK
 
+ESTABLISHED --> CLOSED : RST
+
 ESTABLISHED --> FIN_WAIT_1 : send FIN
 FIN_WAIT_1 --> FIN_WAIT_2 : receive ACK
 FIN_WAIT_2 --> TIME_WAIT : (this will stay 2MSL)receive FIN \n send ACK

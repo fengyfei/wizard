@@ -14,7 +14,7 @@
 
 #### 超时时间 RTO
 
-RTO（retransmission timeout）一般是根据RTT（round trip time）也就是往返时间来设置的。若 RTO 小于   RTT，则会造成很多不必要的重传；若 RTO 远大于 RTT，则会降低整体网络利用率，RTO 是保证 TCP 性能的关键。并且不同连接的RTT不相同，同一个连接不同时间的 RTT 也不相同，所以 RTO 的设置一直都是研究热点。
+RTO（retransmission timeout）一般是根据 RTT（round trip time）也就是往返时间来设置的。若 RTO 小于   RTT，则会造成很多不必要的重传；若 RTO 远大于 RTT，则会降低整体网络利用率，RTO 是保证 TCP 性能的关键。并且不同连接的RTT不相同，同一个连接不同时间的 RTT 也不相同，所以 RTO 的设置一直都是研究热点。
 
 所以凭我们的直觉，RTO 应该比 RTT 稍大：
 
