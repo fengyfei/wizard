@@ -6,7 +6,7 @@
 
 #### 简单的超时重传
 
-![](http://image.littlechao.top/20180315023638000003.jpg)
+![](./images/simple_retrans.png)
 
 图中黑色那条就是因为定时器超时仍没有收到 ACK，所以引起了发送方超时重传。实际上 TCP 有两个阈值来决定如何重传同一个报文段：一是愿意重传的次数 R1、二是应该放弃当前连接的时机 R2。R1 和 R2 的值应分别至少为 3 次和 100 秒，如果超过任何一个但还没能重传成功，会放弃该连接。当然这两个值是可以设置的，在不同系统里默认值也不同。
 
@@ -70,7 +70,7 @@ SRTT(smooth RTT)，RTTnew 是新测量的值。如上，为了防止 RTT 抖动�
 
 如下图，在发送第四个 ACK 后出现延迟高峰，导致发送方在 RTO 时间内没有收到 5 ~ 8 的 ACK，于是发生重传，然后之前的 ACK 到达，于是又依次发送 6 ~ 8，就导致了不必要的重传。可以用 Eifel 算法来解决（略）。
 
-<img src="http://image.littlechao.top/20180315075511000005.jpg" style="height:400px">
+<img src="./images/fake_timeout_retrans.png" style="height:400px">
 
 #### 目的度量
 
@@ -90,7 +90,7 @@ ip route show cache [ip]
 
 所以快速重传概括如下：TCP 发送方在观测到至少 dupthresh ( 通常是 3 ) 个重复 ACK，立即重传，而不必得到计时器超时。当然也可以同时发送新的数据。
 
-示例如下：![](http://image.littlechao.top/20180315024222000004.jpg)
+示例如下：![](./images/fast_retrans.png)
 
 #### 包失序与包重复
 
@@ -98,7 +98,7 @@ ip route show cache [ip]
 
 当然快速重传也会造成一些问题。在轻微失序的情况下(左图)，不会有什么影响。但在严重失序时(右图)，4号数据包延迟到达，接收方发送 4 个冗余 ACK ，让发送方认为 4 号分组丢失，造成伪快速重传。
 
-![](http://image.littlechao.top/20180315092324000007.jpg)
+![](./images/fake_fast_retrans.png)
 
 ##### 重复
 
