@@ -43,3 +43,5 @@
   * [Replication Controller and Replica Set](kubernetes/basic/replication-controller-and-replica-set.md)
   * [Deployment](kubernetes/basic/deployment.md)
   * [Horizontal Pod Autoscaler](kubernetes/basic/horizontal-pod-autoscaler.md)
+* [Blockchain](blockchain/index.md)
+  * [bitcoin](blockchain/the-basic-of-bitcoin.md)
