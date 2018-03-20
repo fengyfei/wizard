@@ -1,0 +1,83 @@
+@startuml
+
+skinparam roundCorner 20
+
+rectangle frontend [
+    frontend\n    pod
+]
+
+rectangle service [
+    service
+    ---
+    selector: label A
+    ---
+    10.0.0.251
+]
+
+interface port0 [
+    :80
+]
+
+interface port1 [
+    :8080
+]
+
+interface port2 [
+    :8080
+]
+
+rectangle apiserver [
+    API Server
+]
+
+rectangle kubeproxy [
+    kube-proxy
+]
+
+rectangle labelselector [
+    label selector
+]
+
+rectangle iptables
+
+rectangle pod1 [
+    pod1
+    ---
+    label A
+    label B
+    ---
+    10.0.0.252
+]
+
+rectangle pod2 [
+    pod2
+    ---
+    label A
+    label C
+    label D
+    ---
+    10.0.0.253
+]
+
+rectangle rc [
+    replication controller
+    ---
+    selector: label A
+    ---
+    replica: 2
+]
+
+frontend => port0
+port0 => service
+service =down=> labelselector
+labelselector =down=> iptables
+apiserver =down=> kubeproxy
+kubeproxy =left=> iptables
+kubeproxy <=left= iptables
+iptables =down=> port1
+iptables =down=> port2
+port1 =down=> pod1
+port2 =down=> pod2
+rc =down=> labelselector
+
+@enduml
