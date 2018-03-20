@@ -45,4 +45,5 @@
   * [Kubernetes Objects](kubernetes/basic/kubernetes-objects.md)
   * [Pods](kubernetes/basic/pod.md)
 * [Blockchain](blockchain/index.md)
-  * [bitcoin](blockchain/the-basic-of-bitcoin.md)
+  * [The Basic of Bitcoin](blockchain/the-basic-of-bitcoin.md)
+  * [Transaction and Scripts of Bitcoin](blockchain/transaction-and-scripts-of-bitcoin.md)
