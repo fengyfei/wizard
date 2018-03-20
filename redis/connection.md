@@ -225,6 +225,8 @@ static void acceptCommonHandler(int fd, int flags, char *ip) {
 }
 ```
 
+从代码中可以看出，连接被抽象成一个 [Client](client.md) 结构处理。
+
 ## References
 
 - [getaddrinfo](https://linux.die.net/man/3/getaddrinfo)

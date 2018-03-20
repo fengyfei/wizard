@@ -1,0 +1,13 @@
+@startuml
+
+entity client
+entity redisDb
+
+entity cmd
+entity lastcmd
+
+client -down-> redisDb: db
+client -down-> cmd
+client -down-> lastcmd
+
+@end
