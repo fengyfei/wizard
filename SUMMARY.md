@@ -5,6 +5,7 @@
 * [redis 源码阅读](redis/index.md)
   * [基础数据结构](redis/basic.md)
   * [Dynamic String](redis/string.md)
+  * [Dictionary](redis/dictionary.md)
   * [Server](redis/server.md)
   * [Connection Management](redis/connection.md)
   * [Client](redis/client.md)
