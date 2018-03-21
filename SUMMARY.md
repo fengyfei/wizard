@@ -7,6 +7,7 @@
     * [List](redis/list.md)
     * [Dynamic String](redis/string.md)
     * [Dictionary](redis/dictionary.md)
+    * [ZipList](redis/ziplist.md)
   * [Server](redis/server.md)
   * [Connection Management](redis/connection.md)
   * [Client](redis/client.md)
