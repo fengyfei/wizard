@@ -9,6 +9,7 @@
     * [Dictionary](redis/dictionary.md)
     * [Zip List](redis/ziplist.md)
     * [Zip Map](redis/zipmap.md)
+    * [Intset](redis/intset.md)
   * [Server](redis/server.md)
   * [Connection Management](redis/connection.md)
   * [Client](redis/client.md)
