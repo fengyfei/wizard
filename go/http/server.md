@@ -1,26 +1,18 @@
 ### net/http/server.go
 
-```
-// ServeMux 类型是 HTTP 请求的路由规则转换器。它会将每一个接收的请求的 URL 与一个注
-// 册模式的列表进行匹配，并调用和 URL 最匹配的模式的 handler.
-// 模式是固定的、由根开始的路径，如"/favicon.ico"，或由根开始的子树，
-// 如"/images/"（注意结尾的斜杠）。较长的模式优先于较短的模式，
-// 因此如果模式"/images/"和"/images/thumbnails/"都注册了处理器，
-// 后一个处理器会用于路径以"/images/thumbnails/"开始的请求，
-// 前一个处理器会接收到其余的路径在"/images/"子树下的请求。
-// 注意，因为以斜杠结尾的模式代表一个由根开始的子树，模式"/"会匹配所有的未被其他注册的模式匹配的路径，而不仅仅是路径"/"。
-// 模式也能（可选地）以主机名开始，表示只匹配该主机上的路径。指定主机的模式优先于一般的模式，
-// 因此一个注册了两个模式"/codesearch"和"codesearch.google.com/"的处理器不会接管目标为"http://www.google.com/"的请求。
-// ServeMux还会注意到请求的 URL 路径的无害化，将任何路径中包含"."或".."元素的请求重定向到等价的没有这两种元素的URL。（参见path.Clean函数）
+```go
+// ServeMux 类型是 HTTP 请求的路由规则转换器。它会将每一个接收的请求的 URL 与一个注册路由的列表进行匹配，并调用和 URL 最匹配的 handler.
+// 匹配到多个时较长的模式优先于较短的模式，模式也可以主机名开始，表示只匹配该主机上的路径，指定主机的模式优先于一般的模式，
+// ServeMux 还会规范化请求的 URL 路径，将任何包含"."或".."元素的请求重定向到等价的没有这两种元素的URL
 type ServeMux struct {
 	mu    sync.RWMutex // 读写锁
-	m     map[string]muxEntry // 路由规则，一个string对应一个mux实体，这里的string就是注册的路由表达式
-	hosts bool // 是否在任意的规则中带有host信息
+	m     map[string]muxEntry // 路由规则，一个 string 对应一个 mux 实体，这里的 string 就是注册的路由表达式
+	hosts bool // 是否在任意的规则中带有 host 信息
 }
 
 type muxEntry struct {
-    h        Handler // 这个路由表达式对应哪个handler
-    pattern  string  // 匹配字符串
+    h        Handler // 这个路由表达式对应哪个 handler
+    pattern  string  // 固定的、由根开始的路径，如 "/favicon.ico"，或由根开始的子树，如 "/images/"，也可以主机名开头
 }
 
 // 一个 Handler 响应一个 HTTP 请求
@@ -51,17 +43,15 @@ func NotFoundHandler() Handler { return HandlerFunc(NotFound) } // 函数的类�
 
 在 ServerMux.handler 中当匹配不到注册的路由时返回 NotFoundHandler
 ```
-// handler is the main implementation of Handler.
 func (mux *ServeMux) handler(host, path string) (h Handler, pattern string) {
 	mux.mu.RLock()
 	defer mux.mu.RUnlock()
 
-	// Host-specific pattern takes precedence over generic ones
 	if mux.hosts {
-		h, pattern = mux.match(host + path)
+		h, pattern = mux.match(host + path) // match 根据完整 URL 优先匹配 handler
 	}
 	if h == nil {
-		h, pattern = mux.match(path)
+		h, pattern = mux.match(path) // 如果 URL 匹配不到再根据路径匹配
 	}
 	if h == nil {
 		h, pattern = NotFoundHandler(), ""
@@ -71,9 +61,7 @@ func (mux *ServeMux) handler(host, path string) (h Handler, pattern string) {
 
 // Handler 通过判断 r.Method, r.Host, and r.URL.Path 返回与 request 对应的 handler
 // 此函数总会返回非空的 handler. 如果 path 不符合规范形式，返回的是内部生成的重定向到规范路径的 handler
-// 如果 host 包含端口，匹配 handlers 时会忽略端口。
-// The path and host are used unchanged for CONNECT requests.
-// 第二个参数返回已注册的与请求匹配的路由
+// 如果 host 包含端口，匹配 handlers 时会忽略端口。第二个参数返回已注册的与请求匹配的路由
 // 如果没有已注册的 handler 与请求匹配, 则返回 ``page not found'' handler 和空的 pattern
 func (mux *ServeMux) Handler(r *Request) (h Handler, pattern string) {
 	if r.Method == "CONNECT" {
@@ -164,13 +152,67 @@ func HandleFunc(pattern string, handler func(ResponseWriter, *Request)) {
 ```
 ---
 
-正常流程：
-当一个请求 request 进来的时候，server 会依次根据 ServeMux.m 中的 string（路由表达式）来一个一个匹配，如果找到了可以匹配的 muxEntry，就取出 muxEntry.h，这是个 handler，调用 handler 中的 ServeHTTP（ResponseWriter, *Request）来组装 Response，并返回。
+请求路由解析调用流程：
+当一个请求 request 进来的时候，server 会依次根据 ServeMux.m 中的 string（路由表达式）来一个一个匹配，
+如果找到了可以匹配的 muxEntry，就取出 muxEntry.h，这是个 handler，
+调用 handler 中的 ServeHTTP（ResponseWriter, *Request）来组装 Response，并返回。
 
 ---
 
-其他接口，未完待续
+```go
+type Server struct {
+	Addr    string  // 要监听的 TCP 地址
+	Handler Handler // 调用的 handler, 如果为空则用 http.DefaultServeMux
+	TLSConfig *tls.Config // 用于 ServeTLS 和 ListenAndServeTLS
+	ReadTimeout time.Duration // 读取完整 request (包括 body) 的最大时长，可以和 ReadHeaderTimeout 同时使用
+	ReadHeaderTimeout time.Duration // 读取 request headers 的最大时长
+	WriteTimeout time.Duration // 写 response 的最大时长
+	IdleTimeout time.Duration // 当 keepalive 开启时等待下个 request 的最大时长，此值为空时使用 ReadTimeout 值代替，ReadTimeout 也为空使用 ReadHeaderTimeout 代替
+
+	// MaxHeaderBytes controls the maximum number of bytes the
+	// server will read parsing the request header's keys and
+	// values, including the request line. It does not limit the
+	// size of the request body.
+	// If zero, DefaultMaxHeaderBytes is used.
+	MaxHeaderBytes int // 解析 request headers 里键值对的最大字节数(包含)
+
+	// TLSNextProto optionally specifies a function to take over
+	// ownership of the provided TLS connection when an NPN/ALPN
+	// protocol upgrade has occurred. The map key is the protocol
+	// name negotiated. The Handler argument should be used to
+	// handle HTTP requests and will initialize the Request's TLS
+	// and RemoteAddr if not already set. The connection is
+	// automatically closed when the function returns.
+	// If TLSNextProto is not nil, HTTP/2 support is not enabled
+	// automatically.
+	TLSNextProto map[string]func(*Server, *tls.Conn, Handler)
+
+	// ConnState specifies an optional callback function that is
+	// called when a client connection changes state. See the
+	// ConnState type and associated constants for details.
+	ConnState func(net.Conn, ConnState)
+
+	// ErrorLog specifies an optional logger for errors accepting
+	// connections, unexpected behavior from handlers, and
+	// underlying FileSystem errors.
+	// If nil, logging is done via the log package's standard logger.
+	ErrorLog *log.Logger
+
+	disableKeepAlives int32     // accessed atomically.
+	inShutdown        int32     // accessed atomically (non-zero means we're in Shutdown)
+	nextProtoOnce     sync.Once // guards setupHTTP2_* init
+	nextProtoErr      error     // result of http2.ConfigureServer if used
+
+	mu         sync.Mutex
+	listeners  map[net.Listener]struct{}
+	activeConn map[*conn]struct{}
+	doneChan   chan struct{}
+	onShutdown []func()
+}
 ```
+
+其他接口，未完待续
+```go
 // ResponseWriter 接口用于 HTTP handler 生成 response
 // 在 Handler.ServeHTTP 返回后，ResponseWriter 不应该再被使用
 type ResponseWriter interface {
@@ -221,3 +263,4 @@ type conn struct {
 
 - [Package http](https://golang.org/pkg/net/http/)
 - [Golang Http Server源码阅读](https://studygolang.com/articles/1740)
+- [Go Web 编程](https://astaxie.gitbooks.io/build-web-application-with-golang/zh/)
