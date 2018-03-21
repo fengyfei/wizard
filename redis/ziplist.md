@@ -79,7 +79,7 @@
 由于 length 只有 6 bits，所以能表示的最大长度为 2 ^ 6 - 1 = 63 字节
 ```
 
-- > 63 且 <= 16383
+- \> 63 且 <= 16383
 
 14-bits 长度使用 [Big Endian](https://en.wikipedia.org/wiki/Endianness#Big-endian)
 
@@ -93,7 +93,7 @@
 总长度为 2 ^ 14 - 1 = 16383
 ```
 
-- > 16383 且 <= 2 ^ 32 -1
+- \> 16383 且 <= 2 ^ 32 -1
 
 32-bits 长度使用 [Big Endian](https://en.wikipedia.org/wiki/Endianness#Big-endian)
 
