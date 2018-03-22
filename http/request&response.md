@@ -4,7 +4,7 @@
 ```
 Request = Request-Line             // 请求行
           *(( general-header       // 通用首部
-            | request-header       // 请求手部
+            | request-header       // 请求首部
             | entity-header )CRLF) // 实体首部
           CRLF
           [ message-body ]
@@ -65,12 +65,18 @@ news:comp.infosystems.www.servers.unix
 tel:+1-816-555-1212 telnet://192.0.2.16:80/
 urn:oasis:names:specification:docbook:dtd:xml:4.1.2
 ```
-绝对 URI 的格式应该是这样的：
-![image](https://upload-images.jianshu.io/upload_images/30117-5f61d91cd1402f07.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/700)
+绝对 URI 的格式应该是这样的:
 
-与 URL(统一资源定位符，Universal Resource Locator) 和 URN(统一资源名，Uniform Resource Name)的关系：
 
-URL 和 URN 是 URI 的两个子集，URI 唯一标识了文件资源对象(类似身份证)，URN 标识资源名称，URL 标识资源地址
+
+<u>http</u>://<u>user:pass</u>@<u>www.example.com</u>:<u>80</u>/<u>dir/index.html</u>?<u>uid=1</u>#<u>ch1</u>
+
+协议://登录信息@服务器地址:端口号/文件路径?查询字符串#片段标识符
+
+
+> 与 URL(统一资源定位符，Universal Resource Locator) 和 URN(统一资源名，Uniform Resource Name)的关系：
+
+>> URL 和 URN 是 URI 的两个子集，URI 唯一标识了文件资源对象(类似身份证)，URN 标识资源名称，URL 标识资源地址
 
 ## Response
 

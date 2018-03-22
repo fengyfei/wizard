@@ -1,6 +1,6 @@
 ### 1. rpc/server.go
 
-![image](https://raw.githubusercontent.com/fengyfei/wizard/b340cd33f115c9bf41dd80bd8aee92c129191f53/go/rpc/images/rpc_server.png?token=AXUDI6eLePjfKv4GGm7-ZyJlpltPlVzDks5asd7bwA%3D%3D)
+![image](https://github.com/fengyfei/wizard/raw/master/go/rpc/images/rpc_server.png)
 
 ```go
 type service struct {
@@ -193,7 +193,7 @@ func (server *Server) HandleHTTP(rpcPath, debugPath string) {
 
 ### 2. rpc/client.go
 
-![image](https://raw.githubusercontent.com/fengyfei/wizard/b340cd33f115c9bf41dd80bd8aee92c129191f53/go/rpc/images/rpc_client.png?token=AXUDI5t9jN7S-y8pQTFycid-jcWBAKtQks5asd5twA%3D%3D)
+![image](https://github.com/fengyfei/wizard/raw/master/go/rpc/images/rpc_client.png)
 
 ```go
 // Call 代表一个活跃的 RPC.
