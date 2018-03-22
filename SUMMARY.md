@@ -11,6 +11,7 @@
     * [Zip Map](redis/zipmap.md)
     * [Intset](redis/intset.md)
   * [Server](redis/server.md)
+  * [Event Loop](redis/event-loop.md)
   * [Connection Management](redis/connection.md)
   * [Client](redis/client.md)
   * [Pub/Sub](redis/pub-sub.md)
