@@ -1,0 +1,102 @@
+@startuml
+
+entity aeEventLoop {
+    + int maxfd
+    + int setsize
+    + long long timeEventNextId
+    + time_t lastTime
+    + int stop
+}
+
+entity aeApiState {
+    + int epfd
+    + struct epoll_event *events
+}
+
+aeEventLoop -down-> aeApiState: apidata
+
+entity aeFileEvent_01 {
+    + int mask
+    + aeFileProc *rfileProc
+    + aeFileProc *wfileProc
+    + void *clientData
+}
+
+entity aeFileEvent_02 {
+    + int mask
+    + aeFileProc *rfileProc
+    + aeFileProc *wfileProc
+    + void *clientData
+}
+entity aeFileEvent_03 {
+    + int mask
+    + aeFileProc *rfileProc
+    + aeFileProc *wfileProc
+    + void *clientData
+}
+
+aeEventLoop .up.> aeFileEvent_01: events
+aeFileEvent_01 .right.> aeFileEvent_02
+aeFileEvent_02 .right.> aeFileEvent_03
+
+entity aeFiredEvent_01 {
+    + int fd
+    + int mask
+}
+
+entity aeFiredEvent_02 {
+    + int fd
+    + int mask
+}
+
+entity aeFiredEvent_03 {
+    + int fd
+    + int mask
+}
+
+aeEventLoop .down.> aeFiredEvent_01: fired
+aeFiredEvent_01 .right.> aeFiredEvent_02
+aeFiredEvent_02 .right.> aeFiredEvent_03
+
+entity aeTimeEvent_01 {
+    + long long id
+    + long when_sec
+    + long when_ms
+    + aeTimeProc *timeProc
+    + aeEventFinalizerProc *finalizerProc
+    + void *clientData
+    + struct aeTimeEvent *next
+}
+
+entity aeTimeEvent_02 {
+    + long long id
+    + long when_sec
+    + long when_ms
+    + aeTimeProc *timeProc
+    + aeEventFinalizerProc *finalizerProc
+    + void *clientData
+    + struct aeTimeEvent *next
+}
+
+entity aeTimeEvent_03 {
+    + long long id
+    + long when_sec
+    + long when_ms
+    + aeTimeProc *timeProc
+    + aeEventFinalizerProc *finalizerProc
+    + void *clientData
+    + struct aeTimeEvent *next
+}
+
+aeEventLoop .left.> aeTimeEvent_01: timeEventHead
+aeTimeEvent_01 .left.> aeTimeEvent_02
+aeTimeEvent_02 .left.> aeTimeEvent_03
+
+entity aeBeforeSleepProc {
+    + beforesleep
+    + aftersleep
+}
+
+aeEventLoop -right-> aeBeforeSleepProc 
+
+@end
