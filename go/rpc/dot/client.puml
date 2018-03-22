@@ -1,0 +1,26 @@
+@startuml
+
+usecase DialHTTP[
+    client := DialHTTP("tcp", address)
+]
+usecase Call[
+    client.Call("Service.Method", args, &reply)
+]
+usecase Go[
+    divCall := client.Go("Arith.Divide", args, &reply, nil)
+]
+
+:Client: -down-> DialHTTP: via HTTP
+DialHTTP -down-> Call: synchronous
+DialHTTP -down-> Go
+Go -down-> (<-divCall.Done)
+
+usecase Dial[
+    client := Dial("tcp", service)
+]
+
+:Client: -down-> Dial: via TCP or custom connect
+Dial -down-> Call
+Dial -down-> Go: asynchronous
+
+@enduml

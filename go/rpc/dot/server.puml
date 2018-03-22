@@ -1,0 +1,45 @@
+@startuml
+
+node Server
+usecase Register[
+    rpc.Register(rcvr interface)
+]
+usecase register[
+    DefaultServer.register(rcvr interface{}, name string, useName bool)
+]
+usecase HandleHTTP[
+    rpc.HandleHTTP(rpcPath, debugPath string)
+]
+usecase netListen[
+    net.Listen("tcp", port)
+]
+usecase httpServe[
+    http.Serve(lis, nil)
+]
+
+' via HTTP
+Server -down-> Register
+Register -left-> register: invoke
+Register -down-> HandleHTTP: via HTTP
+HandleHTTP -left-> (http.Handle): invoke
+(http.Handle) -left-> (http.DefaultServeMux.Handle): invoke
+HandleHTTP -down-> httpServe
+netListen -right-> httpServe: pass listener lis
+
+' via TCP or custom connect
+usecase netResolveTCPAddr[
+    net.ResolveTCPAddr("tcp", port)
+]
+usecase netListenTCP[
+    net.ListenTCP("tcp", tcpAddr)
+]
+usecase ServeConn[
+    rpc.ServeConn(conn)
+]
+Register -down-> netListenTCP: via TCP or custom connect
+netResolveTCPAddr -down-> netListenTCP: pass tcpAddr
+netListenTCP -down-> ServeConn
+(listener.Accept) -left-> ServeConn: pass conn
+ServeConn -down-> (service.call): when client invoke service
+
+@enduml
