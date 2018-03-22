@@ -10,6 +10,7 @@
     * [Zip List](redis/ziplist.md)
     * [Zip Map](redis/zipmap.md)
     * [Intset](redis/intset.md)
+    * [Skip List](redis/skiplist.md)
   * [Server](redis/server.md)
   * [Event Loop](redis/event-loop.md)
   * [Connection Management](redis/connection.md)
