@@ -16,7 +16,7 @@
 
 在 Kubernetes 中创建对象时，必须提供描述其所需状态的对象规范以及有关该对象的一些基本信息（如名称）。下面是一个示例文件：
 
-``` yaml
+```yaml
 # nginx-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment

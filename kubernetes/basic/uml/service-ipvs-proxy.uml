@@ -1,0 +1,38 @@
+@startuml
+
+rectangle Node {
+    rectangle Client
+    cloud ServiceIP [
+        ServiceIP
+        (Virtual Server)
+    ]
+    rectangle kubeproxy [
+        kube-proxy
+    ]
+}
+
+rectangle apiserver
+
+rectangle "(Real Server)" {
+    rectangle Pod1 [
+        Backend Pod1
+    ]
+
+    rectangle Pod2 [
+        Backend Pod2
+    ]
+
+    rectangle Pod3 [
+        Backend Pod3
+    ]
+}
+
+
+apiserver =down=> kubeproxy
+kubeproxy =down=> ServiceIP
+Client =down=> ServiceIP
+ServiceIP =down=> Pod1
+ServiceIP =down=> Pod2
+ServiceIP =down=> Pod3
+
+@enduml

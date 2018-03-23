@@ -1,0 +1,41 @@
+@startuml
+
+rectangle Node {
+    rectangle Client
+    cloud ServiceIP [
+        ServiceIP
+        (iptables)
+    ]
+    rectangle kubeproxy [
+        kube-proxy
+    ]
+}
+
+rectangle apiserver
+
+rectangle Pod1 [
+    Backend Pod1
+    labels: app=MyApp
+    Port: 9376
+]
+
+rectangle Pod2 [
+    Backend Pod2
+    labels: app=MyApp
+    Port: 9376
+]
+
+rectangle Pod3 [
+    Backend Pod3
+    labels: app=MyApp
+    Port: 9376
+]
+
+Client =down=> ServiceIP
+ServiceIP =right=> kubeproxy
+apiserver =left=> kubeproxy
+kubeproxy =down=> Pod1
+kubeproxy =down=> Pod2
+kubeproxy =down=> Pod3
+
+@enduml
