@@ -2,6 +2,12 @@
 
 * [Introduction](README.md)
 * [git 源码阅读](git/index.md)
+  * [基础数据结构]()
+    * [Object](git/object.md)
+    * [Blob](git/blob.md)
+    * [Tree](git/tree.md)
+    * [Commit](git/commit.md)
+    * [Tag](git/tag.md)
 * [redis 源码阅读](redis/index.md)
   * [基础数据结构]()
     * [List](redis/list.md)
