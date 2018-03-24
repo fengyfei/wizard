@@ -1,0 +1,22 @@
+@startuml
+scale 800 width
+
+[*] -right-> SlowStart
+
+SlowStart --> CongestionAvoid : cwnd > ssthresh
+
+SlowStart --> SlowStart : ACK, cwnd+=SMSS
+
+CongestionAvoid --> CongestionAvoid : ACK, cwnd += SMSS*SMSS/cwnd
+
+CongestionAvoid --> SlowStart : timeout \n ssthresh=cwnd/2 \n cwnd=1
+
+FastRecover --> SlowStart : timeout \n ssthresh=cwnd/2 \n cwnd=1
+
+CongestionAvoid --> FastRecover : 3 dupACK \n ssthresh=cwnd/2 \n cwnd=ssthresh+3*SMSS
+
+FastRecover --> CongestionAvoid : new ACK \n cwnd=ssthresh
+
+FastRecover --> FastRecover : dupACK \n cwnd += 1
+
+@enduml
