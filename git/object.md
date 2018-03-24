@@ -19,6 +19,8 @@ struct object {
 };
 ```
 
+object 是其他核心对象的基础属性，其他核心对象通过包含 object 对象，实现部分类似 C++ 的面向对象功能。
+
 object_array 结构
 
 ```C
