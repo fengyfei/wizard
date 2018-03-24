@@ -5,7 +5,7 @@
   * [数据结构]()
     * [Object](git/object.md)
     * [Core](git/core.md)
-  * [基本操作]()
+  * [基本操作](git/cmd.md)
     * [Init](git/init.md)
     * [Add](git/add.md)
     * [Commit](git/commit.md)
