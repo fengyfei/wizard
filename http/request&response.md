@@ -67,8 +67,6 @@ urn:oasis:names:specification:docbook:dtd:xml:4.1.2
 ```
 绝对 URI 的格式应该是这样的:
 
-
-
 <u>http</u>://<u>user:pass</u>@<u>www.example.com</u>:<u>80</u>/<u>dir/index.html</u>?<u>uid=1</u>#<u>ch1</u>
 
 协议://登录信息@服务器地址:端口号/文件路径?查询字符串#片段标识符
@@ -152,7 +150,7 @@ request-header = Accept               // 通知服务器，用户代理能够处
 ```
 response-header = Accept-Ranges      // 告知客户端服务器是否能处理范围请求，以指定获取服务器端某个部分的资源。可处理范围请求时指定其为 bytes，反之则指定其为 none。
                 | Age                // 告知客户端，源服务器在多久前创建了响应。字段值的单位为秒。若创建该响应的服务器是缓存服务器，Age 值是指缓存后的响应再次发起认证到认证完成的时间值。代理创建响应时必须加上首部字段 Age。
-                | ETag               // 告知客户端实体标识。它是一种可将资源以字符串形式做唯一性标识的方式。服务器会为每份资源分配对应的 ETag 值。有强弱之分
+                | ETag               // 告知客户端实体标签(Entity Tag)。它是一种可将资源以字符串形式做唯一性标识的方式。服务器会为每份资源分配对应的 ETag 值。有强弱之分，弱Etag以'w/'开头，强校验的ETag匹配要求两个资源内容逐字节相同，包括所有其他实体字段（如Content-Language）不发生变化；弱校验只需要确认资源内容相同即可，忽略细微差别比如修改时间等
                 | Location           // 将响应接收方引导至某个与请求 URI 位置不同的资源。该字段会配合 3xx ：Redirection 的响应，提供重定向的 URI。
                 | Proxy-Authenticate // 由代理服务器所要求的认证信息发送给客户端。
                 | Retry-After        // 告知客户端应该在多久之后再次发送请求。主要配合状态码 503 Service Unavailable 响应，或 3xx Redirect 响应一起使用。字段值可以指定为具体的日期时间（Wed, 04 Jul 2012 06：34：24 GMT 等格式），也可以是创建响应后的秒数
@@ -178,6 +176,4 @@ entity-header = Allow              // 服务端通知客户端能够支持 Reque
 ## References
 
 - [RFC2616](https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html)
-- [刨根问底 HTTP 和 WebSocket 协议](https://www.jianshu.com/p/0e5b946880b4)
-- [HTTP 协议中的 Transfer-Encoding](https://imququ.com/post/transfer-encoding-header-in-http.html)
 - [wikipedia uri](https://zh.wikipedia.org/wiki/%E7%BB%9F%E4%B8%80%E8%B5%84%E6%BA%90%E6%A0%87%E5%BF%97%E7%AC%A6)
