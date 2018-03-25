@@ -212,3 +212,7 @@ status = p->fn(argc, argv, prefix);
 ```
 
 只有 prefix 参数，目前不知道什么含义。
+
+## References
+
+- [Git Command Docs](https://git-scm.com/docs/)
