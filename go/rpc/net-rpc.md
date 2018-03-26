@@ -191,7 +191,7 @@ func (server *Server) HandleHTTP(rpcPath, debugPath string) {
 }
 ```
 
-### 2. rpc/client.go
+### 2. client
 
 ![image](https://github.com/fengyfei/wizard/raw/master/go/rpc/images/rpc_client.png)
 
@@ -425,7 +425,7 @@ func (client *Client) send(call *Call) {
 }
 ```
 
-### 3. net/rpc/jsonrpc
+### 3. jsonrpc
 
 jsonrpc 主要将 gob 序列化工具换成 json 序列化工具，主要函数还是调用 server 里的 FuncWithCodec 函数，原理基本一致
 
