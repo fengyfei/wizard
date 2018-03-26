@@ -67,6 +67,12 @@ int cmd_main(int argc, const char **argv)
 handle_builtin 中关键代码为：
 
 ```C
+	if (p->option & RUN_SETUP)
+		prefix = setup_git_directory();
+
+	if (!help && p->option & NEED_WORK_TREE)
+		setup_work_tree();
+
 	// 根据 cmd 找到对应执行函数
 	builtin = get_builtin(cmd);
 	if (builtin)
