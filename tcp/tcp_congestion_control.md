@@ -232,3 +232,13 @@ CWR 处理过程如下：
 
 接收方对还没到达的数据进行提前确认，使得 RTT 变得比较小，同样使得发送方不断增大 cwnd。可以采用一个可累加的随机数，动态匹配 ACK。
 
+
+
+## Reference
+
+- [rfc](https://tools.ietf.org/html/rfc7661)
+
+
+- [Congestion Control in Linux TCP](https://pdfs.semanticscholar.org/0e9c/968d09ab2e53e24c4dca5b2d67c7f7140f8e.pdf)
+
+  ​
