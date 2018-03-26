@@ -110,3 +110,65 @@ Reno 算法是标准 TCP 的基础，它根据之前提到的“包守恒”实�
 
 ![](./images/reno_fsm.png)
 
+#### NewReno
+
+Reno 算法在同一窗口下丢失多个包时，其中一个包快速重传成功，就会停止 cwnd 膨胀，造成其它丢失的包可能触发超时重传，然后 cwnd 降为 1 SMSS，吞吐量大大降低。NewReno 采用了一个“恢复点”，指的是收到的 ACK 号大于已发送包的序列号的最大值，达到这个恢复点，才会退出快速恢复。下图最右图中， ACK11 达到了恢复点。
+
+![](./images/reno_newReno.png)
+
+#### 限制传输
+
+限制传输策略对 TCP 做了微小改进，主要是为了解决窗口较小时，出现丢包，但是没有足够的包去引发快速重传/快速恢复机制。为了尽快触发快速重传，每接收两个连续重复 ACK，就发送一个新的包，使网络中的数据量维持一定数量。这是 TCP 推荐策略。
+
+#### 拥塞窗口校验
+
+##### 发送端受限
+
+> 发送端可能出现发送受限， cwnd 的值就会变的不那么准确。
+
+* 空闲阶段（idle period）：发送端暂时没有发送的需求，并且之前发送的数据都已经收到 ACK
+* 应用受限（application-limited period）：发送方实际发送的数据小于 cwnd，并且可能仍有 ACK 未收到
+
+这里对应 TCP/IP 详解卷一里，书上对于“应用受限”说法不正确。书上说此时“无法发送”，但是查阅 rfc 原文如下：
+
+```
+"application-limited period" for the time when the sender sends less than is allowed by the congestion or receiver windows.
+```
+
+##### CWV
+
+拥塞窗口校验（Congestion Window Validation）机制规定，需要发送新数据时，距离上次发送操作超过一个 RTO，如果是：
+
+* 空闲阶段：
+  * ssthresh = max(ssthresh, 0.75 * cwnd)
+  * 每隔一个 RTT，cwnd 减半，但不小于 1 SMSS
+* 应用受限：
+  * 实际使用的窗口大小记为 W_used
+  * ssthresh = max(ssthresh, 0.75 * cwnd)
+  * cwnd = (cwnd + W_used) / 2
+
+在长时间发送暂停后，cwnd 低于 ssthresh，再次发送时会进入慢启动。Linux 默认开启 CWV。
+
+### 伪 RTO 处理 —— Eifel 算法
+
+在之前的超时重传里，我们提到了 伪超时，再来回顾下(注意下图是相当简易的情形，没有考虑延时 ACK 以及 cwnd 增长，会意即可)：
+
+<img src="./images/fake_timeout_retrans.png" style="height:400px">
+
+伪超时可能引起“回退 N 步”的行为，并且可能触发快速重传，浪费不少资源。
+
+##### Eifel 检测算法
+
+该算法利用 TCP 的 TSOPT 选项，在发送生超时后，重传报文并记录 TSV，期待一个 ACK，若 ACK 的 TSER 小于重传报文的 TSV，则认为该 ACK 是对原始报文的确认而不是对重传报文的确认，即认定该重传是伪重传。
+
+##### Eifel 响应
+
+前面提到过，发生超时，则 ssthresh 减半，cwnd 降为 1 SMSS。发生伪超时的话，在 RTO 之后到来的 ACK 会使 cwnd 快速变大，但仍会有不必要重传。
+
+采用 Eifel 算法，在判定伪超时后，会撤销对 ssthresh 的修改。在每次超时对 ssthresh 修改之前，会用 pipe_prev 变量来保存当前的 ssthresh，以便撤销修改。
+
+若出现伪重传，当 ACK 到达时，假设 ACK 确认的报文段长度为 A：
+
+* cwnd = 在外数据值 + min(A，IW)
+* ssthresh = pipe_prev
+
