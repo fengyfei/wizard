@@ -177,3 +177,4 @@ entity-header = Allow              // 服务端通知客户端能够支持 Reque
 
 - [RFC2616](https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html)
 - [wikipedia uri](https://zh.wikipedia.org/wiki/%E7%BB%9F%E4%B8%80%E8%B5%84%E6%BA%90%E6%A0%87%E5%BF%97%E7%AC%A6)
+- [图解HTTP]

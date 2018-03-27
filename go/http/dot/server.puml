@@ -1,0 +1,77 @@
+@startuml
+
+node Server
+usecase Serve[
+    http.Serve(l net.Listener, handler Handler)
+]
+usecase ListenAndServe[
+    http.ListenAndServe(addr string, handler Handler)
+]
+usecase ServeTLS[
+    http.ServeTLS(l net.Listener, handler Handler, certFile, keyFile string)
+]
+usecase ListenAndServeTLS[
+    http.ListenAndServeTLS(addr, certFile, keyFile string, handler Handler)
+]
+usecase srv.Serve[
+    *Server.Serve(l net.Listener)
+]
+usecase srv.ServeTLS[
+    *Server.ServeTLS(l net.Listener, certFile, keyFile string)
+]
+usecase con.serve[
+    *conn.serve(ctx context.Context)
+]
+
+Server -down-> Serve: "      custom listener"
+Server -left-> ListenAndServe: HTTP
+Server -down-> ServeTLS
+Server -right-> ListenAndServeTLS: HTTPS
+
+Serve -down-> srv.Serve:invoke
+ServeTLS -down-> srv.ServeTLS:invoke
+srv.ServeTLS -down-> srv.Serve:config and certificate before serve
+
+ListenAndServeTLS -down-> ServeTLS: tcpKeepAliveListener with cert and key
+ListenAndServe -down-> Serve: tcpKeepAliveListener
+
+srv.Serve -down-> con.serve: accept and register conn then serve request
+
+usecase serveMux[
+    serverHandler{c.server}.ServeHTTP(w, w.req)
+]
+usecase defaultServeMux[
+    DefaultServeMux.ServeHTTP(rw, req)
+]
+usecase globalOptionsHandler[
+    globalOptionsHandler.ServeHTTP(rw, req)
+]
+usecase customHandler[
+    handler.ServeHTTP(rw, req)
+]
+
+con.serve -down-> serveMux: get request
+serveMux -down-> defaultServeMux: if srv.Handler == nil
+serveMux -down-> globalOptionsHandler: else if req is OPTIONS *
+serveMux -down-> customHandler: else
+
+usecase mux.Handler[
+    *ServeMux.Handler(r *Request) (h Handler, pattern string)
+]
+usecase h.ServeHTTP[
+    h.ServeHTTP(w, r)
+]
+usecase mux.handler[
+    *ServeMux.handler(host, path string) (h Handler, pattern string)
+]
+usecase mux.Handle[
+    *ServeMux.Handle(pattern string, handler Handler)
+    or
+    *ServeMux.HandleFunc(pattern string, handler func(ResponseWriter, *Request))
+]
+
+defaultServeMux -down-> h.ServeHTTP: invoke
+mux.Handler -left-> h.ServeHTTP: pass handler h which matches request
+mux.Handler -down-> mux.handler: invoke
+mux.Handle -left-> mux.handler: register handler
+@enduml
