@@ -11,6 +11,7 @@
     * [Commit](git/commit.md)
   * [辅助功能]()
     * [Path Spec](git/pathspec.md)
+    * [Dir](git/dir.md)
 * [redis 源码阅读](redis/index.md)
   * [基础数据结构]()
     * [List](redis/list.md)

@@ -26,6 +26,41 @@ if (read_cache() < 0)
 
 问了加速 git 运行，在读取 index 文件过程中，使用了 [mmap](https://en.wikipedia.org/wiki/Mmap)。
 
+然后是读取 pathspec：
+
+```C
+parse_pathspec(&pathspec, 0,
+	       PATHSPEC_PREFER_FULL |
+	       PATHSPEC_SYMLINK_LEADING_PATH,
+	       prefix, argv);
+```
+
+这个方法比较关键，我们在 [Path Spec](pathspec.md) 中详细讲解。
+
+然后，获取目录更改信息：
+
+```C
+if (add_new_files) {
+	int baselen;
+
+	/* Set up the default git porcelain excludes */
+	memset(&dir, 0, sizeof(dir));
+	if (!ignored_too) {
+		dir.flags |= DIR_COLLECT_IGNORED;
+		setup_standard_excludes(&dir);
+	}
+
+	/* This picks up the paths that are not tracked */
+	baselen = fill_directory(&dir, &the_index, &pathspec);
+	if (pathspec.nr)
+		seen = prune_directory(&dir, &pathspec, baselen);
+}
+```
+
+关于 dir 相关结构及方法的讲解，在 [Dir](dir.md) 中。
+
+现在，目录来源有 the_index 中现有目录，pathspec 中目录及 dir 中目录。
+
 ## References
 
 - [mmap](https://en.wikipedia.org/wiki/Mmap)
