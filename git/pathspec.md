@@ -236,7 +236,5 @@ static void init_pathspec_item(struct pathspec_item *item, unsigned flags,
 
 ## References
 
-```C
 - [Path Spec](https://git-scm.com/docs/gitglossary#gitglossary-aiddefpathspecapathspec)
 - [Git Attributes](https://git-scm.com/docs/gitattributes)
-```
