@@ -10,7 +10,7 @@ Request = Request-Line             // 请求行
           [ message-body ]
 ```
 
-![image](images/request.png)
+![image](https://github.com/fengyfei/wizard/raw/master/http/images/request.png)
 
 一个 HTTP 的 request 消息以一个请求行开始，从第二行开始是 headers (**️每个键值对都以 CRLF 结尾**)，接下来是一个 CRLF 开头的空行，表示 header 结束，最后是消息主体。
 
@@ -87,7 +87,7 @@ Response = Status-Line             // 状态行
            [ message-body ]
 ```
 
-![image](images/response.png)
+![image](https://github.com/fengyfei/wizard/raw/master/http/images/response.png)
 
 response 第一行是状态行，包含状态码 Status-Code，Reason-Phrase 是状态码的简单文本描述(比如 200 - OK、404 - Not Found)
 
@@ -177,4 +177,4 @@ entity-header = Allow              // 服务端通知客户端能够支持 Reque
 
 - [RFC2616](https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html)
 - [wikipedia uri](https://zh.wikipedia.org/wiki/%E7%BB%9F%E4%B8%80%E8%B5%84%E6%BA%90%E6%A0%87%E5%BF%97%E7%AC%A6)
-- [图解HTTP]
+- 《图解HTTP》

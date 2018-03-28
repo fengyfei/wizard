@@ -206,7 +206,7 @@ func (srv *Server) Serve(l net.Listener) error {
 }
 ```
 
-server.Serve 最后调用 conn.serve，在此函数中调用 `serverHandler{c.server}.ServeHTTP(w, w.req)` 转入前面的路由模块
+server.Serve 最后调用 conn.serve，在此函数中调用 `serverHandler{c.server}.ServeHTTP(w, w.req)` 转入路由模块
 ```go
 func (c *conn) serve(ctx context.Context) {
 	c.remoteAddr = c.rwc.RemoteAddr().String()
@@ -352,8 +352,8 @@ func (c *conn) serve(ctx context.Context) {
 
 ---
 
-> 流程：
-> 当一个请求 request 进来的时候，server 会依次根据 ServeMux.m 中的 string（路由表达式）来一个一个匹配，
+流程：
+当一个请求 request 进来的时候，server 会依次根据 ServeMux.m 中的 string（路由表达式）来一个一个匹配，
 如果找到了可以匹配的 muxEntry，就取出 muxEntry.h，这是个 handler，
 调用 handler 中的 ServeHTTP（ResponseWriter, *Request）来组装 Response，并返回。
 
