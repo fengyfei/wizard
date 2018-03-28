@@ -262,7 +262,7 @@ verify_data = PRF(master_secret, finished_label, Hash(handshake_messages))
 
 尽管可以选择对任意一端进行身份验证，但人们几乎都启用了对服务器的身份验证。如果服 务器选择的套件不是匿名的，那么就需要在 Certificate 消息中跟上自己的证书。
 
-![image](https://github.com/fengyfei/wizard/raw/master/http/images/mutual authentication.png)
+![image](https://github.com/fengyfei/wizard/raw/master/http/images/mutualAuthentication.png)
 
 相比之下，服务器通过发送 CertificateRequest 消息请求对客户端进行身份验证。消息中列 出所有可接受的客户端证书。作为响应，客户端发送自己的 Certificate 消息（使用与服务器发 送证书相同的格式），并附上证书。此后，客户端发送 CertificateVerify 消息，证明自己拥有对应的私钥。
 
