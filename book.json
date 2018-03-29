@@ -1,0 +1,14 @@
+{
+  "plugins": [
+  	"expandable-chapters",
+  	"include-codeblock"
+  ],
+  "pluginsConfig": {
+     "expandable-chapters":{}
+  },
+  "include-codeblock": {
+    "template": "ace",
+    "unindent": true,
+    "edit": false
+  }
+}
