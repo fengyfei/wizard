@@ -80,6 +80,8 @@
     * [Garbage Collection](kubernetes/basic/garbage-collection.md)
     * [Jobs](kubernetes/basic/jobs.md)
     * [CronJob](kubernetes/basic/cronjob.md)
+  * [Foundation](kubernetes/foundation/index.md)
+    * [CRI](kubernetes/foundation/cri.md)
   * [Source Code]()
     * [Prepare](kubernetes/code/source-code.md)
   * [Others]()
