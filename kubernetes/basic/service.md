@@ -12,7 +12,7 @@ Kubernetes Service 定义了这样一种抽象：一个 Pod 的逻辑分组，�
 
 一个 Service 在 Kubernetes 中是一个 REST 对象，和 Pod 类似。像所有的 REST 对象一样， Service 定义可以基于 POST 方式，请求 apiserver 创建新的实例。
 
-## 定义 Service
+## 定义一个 Service
 
 ### 带有 Selector
 
@@ -93,14 +93,26 @@ Kubernetes 群集中的每个节点都运行一个 kube-proxy。kube-proxy 负�
 
 ### userspace
 
-在此模式下，kube-proxy 监视 Kubernetes 主服务器以添加和删除 Service 和 Endpoints 对象。对于每个服务，它会在本地节点上打开一个端口（随机选择）。与此“代理端口”的任何连接都将代理到 Service 的其中的一个 Pod（如端点中所报告的）。使用哪个后端 Pod 是根据 Service 的 SessionAffinity 决定。最后，它安装 iptables 规则，该规则捕获 Service 的 clusterIP（虚拟的）和 Port 的流量，并将该流量重定向到代理后端 Pod 的代理端口。默认情况下，后端的选择是循环算法。
+在此模式下，kube-proxy 监视 Kubernetes 主服务器以添加和删除 Service 和 Endpoints 对象。对于每个服务，它会在本地节点上打开一个端口（随机选择）。与此“代理端口”的任何连接都将代理到 Service 的其中的一个 Pod（如端点中所报告的）。使用哪个后端 Pod 是根据 Service 的 SessionAffinity 决定。最后，它安装 iptables 规则，该规则将流量捕获到 Service 的 clusterIP（虚拟的）和 Port，并将该流量重定向到代理后端 Pod 的代理端口。默认情况下，后端的选择是循环算法。
 
 ![Proxy-mode: userspace](images/service-userspace-proxy.png)
 
+图中，ServiceIP 是 cluster IP。
+
 ### iptables
+
+在此模式下，kube-proxy 监视 Kubernetes 主服务器以添加和删除 Service 和 Endpoints 对象。对于每个 Service，它都会安装 iptables 规则，这些规则将流量捕获到 Service 的 clusterIP（虚拟的）和 Port，并将该流量重定向到服务的后端集合中的一个。对于每个 Endpoints 对象，它都会安装选择后端 Pod 的 iptables 规则。默认情况下，选择的方法是随机的。
+
+显然，iptables 不需要在用户空间和内核空间之间切换，它应该比 userspace 代理更快，更可靠。然而，与 userspace 代理器不同，如果最初选择 Pod 的不响应，iptables 代理器不能自动重试连接另一个 Pod，因此它依赖于正在工作的 [readiness probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#defining-readiness-probes)。
 
 ![Proxy-mode: iptables](images/service-iptables-proxy.png)
 
+图中，ServiceIP 是 cluster IP。
+
 ### ipvs
+
+`Kubernetes v1.9 beta`
+
+在此模式下，Kubernetes Services 和 Endpoints 调用 netlink 接口来相应地创建ipvs规则，并定期与Kubernetes Services和Endpoints同步ipvs规则，以确保ipvs状态与预期一致。当访问服务时，流量将被重定向到其中一个后端Pod。
 
 ![Proxy-mode: ipvs](images/service-ipvs-proxy.png)
