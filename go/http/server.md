@@ -248,7 +248,7 @@ func (c *conn) serve(ctx context.Context) {
 		}
 	}
 
-	// HTTP/1.x flowing
+	// HTTP/1.x following
 
 	ctx, cancelCtx := context.WithCancel(ctx)
 	// WithCancel 返回 &c, func() { c.cancel(true, Canceled) }
