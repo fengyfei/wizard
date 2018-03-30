@@ -84,6 +84,7 @@
     * [CRI](kubernetes/foundation/cri.md)
   * [General](kubernetes/general/index.md)
     * [Scheme](kubernetes/general/scheme.md)
+    * [Serializer](kubernetes/general/serializer.md)
   * [Source Code]()
     * [Prepare](kubernetes/code/source-code.md)
   * [Others]()
