@@ -9,7 +9,7 @@
 ![image](https://github.com/fengyfei/wizard/raw/master/http/images/tls.png)
 
 2. HTTPS = HTTP over TLS.
- 
+
   只需配置浏览器和服务器相关设置开启 TLS，即可实现 HTTPS，TLS 高度解耦，可装可卸，与上层高级应用层协议相互协作又相互独立。
 
 ![image](https://github.com/fengyfei/wizard/raw/master/http/images/https.png)
@@ -102,7 +102,7 @@ block-ciphered struct {
   uint8 padding_length;
 } GenericBlockCipher;
 ```
-padding: 添加的填充将明文长度强制为块密码块长度的整数倍。填充可以是长达255字节的任何长度，只要满足 TLSCiphertext.length 是块长度的整数倍。长度大于需要的值可以阻止基于分析交换信息长度的协议攻击。填充数据向量中的每个 uint8 必须填入填充长度值(即 padding_length)。
+padding: 添加的填充将明文长度强制为块密码块长度的整数倍。填充可以是长达 255 字节的任何长度，只要满足 TLSCiphertext.length 是块长度的整数倍。长度大于需要的值可以阻止基于分析交换信息长度的协议攻击。填充数据向量中的每个 uint8 必须填入填充长度值(即 padding_length)。
 
 padding_length: 填充长度应该使得 GenericBlockCipher 结构的总大小是加密块长度的倍数。 合法值范围从零到255（含）。**该长度指定 padding_length 字段本身除外的填充字段的长度。**
 
@@ -177,58 +177,38 @@ struct {
 
 这条消息将客户端的功能和首选项传送给服务器。
 
-大致内容
+![image](images/wireshark-clienthello.png)
 
-```
-Handshake protocol: ClientHello
-Version: TLS 1.2
-Random
-  Client time: May 22, 2030 02:43:46 GMT
-  Random bytes: b76b0e61829557eb4c611adfd2d36eb232dc1332fe29802e321ee871  Session ID: (empty)
-Cipher Suites
-  Suite: TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-  Suite: TLS_DHE_RSA_WITH_AES_128_GCM_SHA256
-  Suite: TLS_RSA_WITH_AES_128_GCM_SHA256
-  Suite: TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
-  Suite: TLS_DHE_RSA_WITH_AES_128_CBC_SHA
-  Suite: TLS_RSA_WITH_AES_128_CBC_SHA
-  Suite: TLS_RSA_WITH_3DES_EDE_CBC_SHA
-  Suite: TLS_RSA_WITH_RC4_128_SHA
-Compression methods
-  Method: null
-Extensions
-  Extension: server_name
-  Hostname: www.feistyduck.com
-  Extension: renegotiation_info
-  Extension: elliptic_curves
-    Named curve: secp256r1
-    Named curve: secp384r1
-  Extension: signature_algorithms
-    Algorithm: sha1/rsa
-    Algorithm: sha256/rsa
-    Algorithm: sha1/ecdsa
-    Algorithm: sha256/ecdsa
-```
 - Version: 协议版本（protocol version）指示客户端支持的最佳协议版本
-- Random: 一个 32 字节数据，28字节是随机生成的；剩余的4字节包含额外的信息，与客户端时钟有关。在握手时，客户端和服务器都会提供随机数，客户端的暂记作 random_C (用于后续的密钥的生成)。这种随机性对每次握手都是独一无二的，在身份验证中起着举足轻重的作用。它可以防止[重放攻击](https://zh.wikipedia.org/wiki/%E9%87%8D%E6%94%BE%E6%94%BB%E5%87%BB)，并确认初始数据交换的完整性。
-- Session ID: 在第一次连接时，会话ID（session ID）字段是空的，这表示客户端并不希望恢复某个已存在的会话。典型的会话ID包含32字节随机生成的数据
+- Random: 一个 32 字节数据，28字节是随机生成的(图中的 Random Bytes)；剩余的4字节包含额外的信息，与客户端时钟有关(图中使用的是 GMT Unix Time)。在握手时，客户端和服务器都会提供随机数，客户端的暂记作 random_C (用于后续的密钥的生成)。这种随机性对每次握手都是独一无二的，在身份验证中起着举足轻重的作用。它可以防止[重放攻击](https://zh.wikipedia.org/wiki/%E9%87%8D%E6%94%BE%E6%94%BB%E5%87%BB)，并确认初始数据交换的完整性。
+- Session ID: 在第一次连接时，会话ID（session ID）字段是空的，这表示客户端并不希望恢复某个已存在的会话。典型的会话 ID 包含 32 字节随机生成的数据，一般由服务端生成通过 ServerHello 返回给客户端。
 - Cipher Suites: 密码套件（cipher suite）块是由客户端支持的所有密码套件组成的列表，该列表是按优先级顺序排列的
 - Compression: 客户端可以提交一个或多个支持压缩的方法。默认的压缩方法是null，代表没有压缩
 - Extensions: 扩展（extension）块由任意数量的扩展组成。这些扩展会携带额外数据
 
 5.1.2 **ServerHello**
 
-是将服务器选择的连接参数传送回客户端。 这个消息的结构与 ClientHello 类似，只是每个字段只包含一个选项，其中包含服务端的 random_S 参数(用于后续的密钥协商)。服务器无需支持客户端支持的最佳版本。如果服务器不支持与客户端相同的版本，可以提供某个其他版本以期待客户端能够接受
+是将服务器选择的连接参数传送回客户端。
+
+![image](images/wireshark-serverhello.png)
+
+这个消息的结构与 ClientHello 类似，只是每个字段只包含一个选项，其中包含服务端的 random_S 参数(用于后续的密钥协商)。服务器无需支持客户端支持的最佳版本。如果服务器不支持与客户端相同的版本，可以提供某个其他版本以期待客户端能够接受
 
 5.1.3 **Certificate**
 
 典型的 Certificate 消息用于携带服务器 X.509 [证书链](https://zh.wikipedia.org/wiki/%E4%BF%A1%E4%BB%BB%E9%8F%88)。服务器必须保证它发送的证书与选择的算法套件一致。比方说，公钥算法与套件中使用的必须匹配。除此以外，一些密钥交换算法依赖嵌入证书的特定数据，而且要求证书必须以客户端支持的算法签名。所有这些都表明服务器需要配置多个证书（每个证书可能会配备不同的证书链）。
 
-Certificate消息是可选的，因为并非所有套件都使用身份验证，也并非所有身份验证方法都 需要证书。更进一步说，虽然消息默认使用X.509证书，但是也可以携带其他形式的标志；一些套件就依赖[PGP密钥](https://zh.wikipedia.org/wiki/PGP)
+![image](images/wireshark-certificate.png)
+
+Certificate消息是可选的，因为并非所有套件都使用身份验证，也并非所有身份验证方法都需要证书。更进一步说，虽然消息默认使用X.509证书，但是也可以携带其他形式的标志；一些套件就依赖[PGP密钥](https://zh.wikipedia.org/wiki/PGP)
 
 5.1.4 **ServerKeyExchange**
 
-携带密钥交换的额外数据。消息内容对于不同的协商算法套件都会存在差异。在某些场景中，服务器不需要发送任何内容，服务器密钥交换消息仅在服务器证书消息（如果发送）不包含足够的数据以允许客户端交换预主secret（premaster secret）时才由服务器发送。
+携带密钥交换的额外数据。消息内容对于不同的协商算法套件都会存在差异。在某些场景中，服务器不需要发送任何内容，
+服务器密钥交换消息仅在服务器证书消息（如果发送）不包含足够的数据以允许客户端交换预主secret（premaster secret）时才由服务器发送。
+比如基于 DH 的证书，公钥不被证书中包含，需要单独发送
+
+![image](images/wireshark-serverhellodone.png)
 
 5.1.5 **ServerHelloDone**
 
@@ -244,7 +224,9 @@ Certificate消息是可选的，因为并非所有套件都使用身份验证，
 
 5.1.7 **ClientKeyExchange**
 
-合法性验证通过之后，客户端计算产生随机数字 Pre-master，并用证书公钥加密，发送给服务器并携带客户端为密钥交换提供的所有信息。这个消息受协商的密码套件的影响，内容随着不同的协商密码套件而不同。
+![image](images/wireshark-clientkeychange.png)
+
+合法性验证通过之后，客户端计算产生随机数字的预主密钥（Pre-master），并用证书公钥加密，发送给服务器并携带客户端为密钥交换提供的所有信息。这个消息受协商的密码套件的影响，内容随着不同的协商密码套件而不同。
 
 此时客户端已经获取全部的计算协商密钥需要的信息：两个明文随机数 random_C 和 random_S 与自己计算产生的 Pre-master，计算得到协商密钥;
 ```
@@ -258,12 +240,12 @@ enc_key=Fuc(random_C, random_S, Pre-Master)
 > 注意
 ChangeCipherSpec 不属于握手消息，它是另一种协议，只有一条消息，作为它的子协议进行实现。
 
-5.1.9 **Finished**
+5.1.9 **Finished (Encrypted Handshake Message)**
 
 Finished消息意味着握手已经完成。消息内容将加密，以便双方可以安全地交换验证整个握手完整性所需的数据。
 
 这个消息包含 verify_data 字段，它的值是握手过程中所有消息的散列值。这些消息在连接两端都按照各自所见的顺序排列，并以协商得到的主密钥计算散列。这个过程是通过一个伪随机函数（pseudorandom function，PRF）来完成的，这个函数可以生成任意数量的伪随机数据。
-两端的计算方法一致，但会使用不同的标签：客户端使用client finished，而服务器则使用server finished。
+两端的计算方法一致，但会使用不同的标签（finished_label）：客户端使用 client finished，而服务器则使用 server finished。
 
 ```
 verify_data = PRF(master_secret, finished_label, Hash(handshake_messages))
@@ -277,11 +259,13 @@ verify_data = PRF(master_secret, finished_label, Hash(handshake_messages))
 
 5.1.11 **change_cipher_spec**
 
-服务端验证通过之后，服务器同样发送 change_cipher_spec 以告知客户端后续的通信都采用协商的密钥与算法进行加密通信;
+![image](images/wireshark-serverchangecipher.png)
 
-5.1.12 **Finished**
+服务端验证通过之后，服务器同样发送 change_cipher_spec 以告知客户端后续的通信都采用协商的密钥与算法进行加密通信（图中多了一步 New Session Ticket，此为会话票证，会在会话恢复中解释）;
 
-服务器也结合所有当前的通信参数信息生成一段数据并采用协商密钥 session secret (enc_key) 与算法加密并发送到客户端;
+5.1.12 **Finished (Encrypted Handshake Message)**
+
+服务器也结合所有当前的通信参数信息生成一段数据 (verify_data_S) 并采用协商密钥 session secret (enc_key) 与算法加密并发送到客户端;
 
 5.1.13 **握手结束**
 
@@ -290,6 +274,8 @@ verify_data = PRF(master_secret, finished_label, Hash(handshake_messages))
 5.1.14 **加密通信**
 
 开始使用协商密钥与算法进行加密通信。
+
+![image](images/wireshark-applicationdata.png)
 
 #### 5.2 客户端身份验证
 
@@ -325,16 +311,22 @@ struct {
 
 #### 5.3 会话恢复
 
-最初的会话恢复机制是，在一次完整协商的连接断开时，客户端和服务器都会将会话的安全 参数保存一段时间。希望使用会话恢复的服务器为会话指定唯一的标识，称为会话 ID。服务器在  ServerHello 消息中将会话 ID 发回客户端。
+最初的会话恢复机制是，在一次完整协商的连接断开时，客户端和服务器都会将会话的安全参数保存一段时间。希望使用会话恢复的服务器为会话指定唯一的标识，称为会话 ID(Session ID)。服务器在 ServerHello 消息中将会话 ID 发回客户端。
 
-希望恢复早先会话的客户端将适当的会话 ID 放入 ClientHello 消息，然后提交。服务器如果愿意恢复会话，就将相同的会话 ID 放入 ServerHello 消息返回，接着使用之前协商的主密钥生成一套新的密钥，再切换到加密模式，发送 Finished 消息。客户端收到会话已恢复的消息以后，也进行相同的操作。这样的结果是握手只需要一次网络往返。
+希望恢复早先会话的客户端将适当的 Session ID 放入 ClientHello 消息，然后提交。服务器如果愿意恢复会话，就将相同的 Session ID 放入 ServerHello 消息返回，接着使用之前协商的主密钥生成一套新的密钥，再切换到加密模式，发送 Finished 消息。
+客户端收到会话已恢复的消息以后，也进行相同的操作。这样的结果是握手只需要一次网络往返。
+
+Session ID 由服务器端支持，协议中的标准字段，因此基本所有服务器都支持，服务器端保存会话 ID 以及协商的通信信息，占用服务器资源较多。
 
 ![image](https://github.com/fengyfei/wizard/raw/master/http/images/simple-handshake.png)
 
-用来替代服务器会话缓存和恢复的方案是使用会话票证（sesession ticket）。使用这种方式，除了所有的状态都保持在客户端（与HTTP Cookie的原理类似）之外，其消息流与服务器会话缓存是一样的。其思想是服务器取出它的所有会话数据（状态）并进行加密，再以票证的方式发回客户端。 在接下来的连接中，客户端将票证提交回服务器，由服务器检查票证的完整性，解密其内容，再 使用其中的信息恢复会话。这种方法有可能使扩展服务器集群更为简单，因为如果不使用这种方 式，就需要在服务集群的各个节点之间同步会话。
+用来替代服务器会话缓存和恢复的方案是使用会话票证（Session ticket）。使用这种方式，除了所有的状态都保存在客户端（与HTTP Cookie的原理类似）之外，其消息流与服务器会话缓存是一样的。
+其思想是服务器取出它的所有会话数据（状态）并进行加密(密钥只有服务器知道)，再以票证的方式发回客户端。在接下来的连接中，客户端恢复会话时在 **ClientHello 的扩展字段** session_ticket 中携带加密信息将票证提交回服务器，由服务器检查票证的完整性，解密其内容，再使用其中的信息恢复会话。
+这种方法有可能使扩展服务器集群更为简单，因为如果不使用这种方式，就需要在服务集群的各个节点之间同步会话。
+Session ticket 需要服务器和客户端都支持，属于一个扩展字段，占用服务器资源很少。
 
 > 警告
-> 会话票证破坏了 TLS 安全模型。它使用票证密钥加密的会话状态并将其暴露在线路 上。有些实现中的票证密钥可能会比连接使用的密码要弱。如果票证密钥被暴露，就可以解密连接上的全部数据。因此，使用会话票证时，票证密钥需要频繁轮换。
+> 会话票证破坏了 TLS 安全模型。它使用票证密钥加密的会话状态并将其暴露在线路上。有些实现中的票证密钥可能会比连接使用的密码要弱。如果票证密钥被暴露，就可以解密连接上的全部数据。因此，使用会话票证时，票证密钥需要频繁轮换。
 
 ### References
 
