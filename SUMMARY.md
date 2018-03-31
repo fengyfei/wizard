@@ -85,6 +85,7 @@
   * [General](kubernetes/general/index.md)
     * [Scheme](kubernetes/general/scheme.md)
     * [Serializer](kubernetes/general/serializer.md)
+    * [Feature](kubernetes/general/feature.md)
   * [Third Party Libraries]()
     * [Cobra](kubernetes/3rdparty/cobra.md)
   * [Controller]()
