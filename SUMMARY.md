@@ -92,6 +92,7 @@
   * [Client](kubernetes/client-go/index.md)
   * [Third Party Libraries]()
     * [Cobra](kubernetes/3rdparty/cobra.md)
+    * [Limiter](kubernetes/3rdparty/limiter.md)
   * [Controller](kubernetes/controller/index.md)
     * [Bootstrap](kubernetes/controller/bootstrap.md)
   * [Scheduler](kubernetes/scheduler/index.md)
