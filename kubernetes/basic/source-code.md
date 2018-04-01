@@ -7,12 +7,12 @@
 ```shell
 mkdir -p $GOPATH/src/k8s.io
 cd $GOPATH/src/k8s.io
-git clone git@github.com:kubernetes/kubernetes.git
+git clone https://github.com/kubernetes/kubernetes.git
 # 四种 git clone 任选一个
-# git clone https://github.com/kubernetes/kubernetes.git
+# git clone git@github.com:kubernetes/kubernetes.git
 # 库比较大，可以只拉取最新的代码
-# git clone git@github.com:kubernetes/kubernetes.git --depth=1
 # git clone https://github.com/kubernetes/kubernetes.git --depth=1
+# git clone git@github.com:kubernetes/kubernetes.git --depth=1
 ```
 
 ## 编译源码
