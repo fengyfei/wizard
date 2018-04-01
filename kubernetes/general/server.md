@@ -37,3 +37,18 @@ func (h *pathHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.notFoundHandler.ServeHTTP(w, r)
 }
 ```
+
+预置的通用 Profiling 路由注册：
+
+```go
+type Profiling struct{}
+
+// Install adds the Profiling webservice to the given mux.
+func (d Profiling) Install(c *mux.PathRecorderMux) {
+	c.UnlistedHandle("/debug/pprof", http.HandlerFunc(pprof.Index))
+	c.UnlistedHandlePrefix("/debug/pprof/", http.HandlerFunc(pprof.Index))
+	c.UnlistedHandleFunc("/debug/pprof/profile", pprof.Profile)
+	c.UnlistedHandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	c.UnlistedHandleFunc("/debug/pprof/trace", pprof.Trace)
+}
+```
