@@ -40,6 +40,6 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 
 componentconfigv1alpha1 注册代码不在此罗列，原理完全一样。
 
-## Algorithm
+## 内容章节
 
-![Algorithm Overview](./images/algorithm.svg)
+* [Algorithm](./algorithm.md)
