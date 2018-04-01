@@ -89,6 +89,7 @@
     * [Feature](kubernetes/general/feature.md)
     * [Server](kubernetes/general/server.md)
     * [Health](kubernetes/general/health.md)
+    * [Filters](kubernetes/general/filters.md)
   * [Client](kubernetes/client-go/index.md)
   * [Third Party Libraries]()
     * [Cobra](kubernetes/3rdparty/cobra.md)
