@@ -87,6 +87,7 @@
     * [Scheme](kubernetes/general/scheme.md)
     * [Serializer](kubernetes/general/serializer.md)
     * [Feature](kubernetes/general/feature.md)
+    * [ObjectReference](kubernetes/general/object_reference.md)
     * [Server](kubernetes/general/server.md)
     * [Health](kubernetes/general/health.md)
     * [Filters](kubernetes/general/filters.md)
