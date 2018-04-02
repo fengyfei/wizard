@@ -91,6 +91,8 @@
     * [Health](kubernetes/general/health.md)
     * [Filters](kubernetes/general/filters.md)
   * [Client](kubernetes/client-go/index.md)
+    * [Clientset](kubernetes/client-go/clientset.md)
+    * [Event](kubernetes/client-go/event.md)
   * [Third Party Libraries]()
     * [Cobra](kubernetes/3rdparty/cobra.md)
     * [Limiter](kubernetes/3rdparty/limiter.md)
