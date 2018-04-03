@@ -95,6 +95,7 @@
   * [Client](kubernetes/client-go/index.md)
     * [Clientset](kubernetes/client-go/clientset.md)
     * [Event](kubernetes/client-go/event.md)
+    * [Leader Election](kubernetes/client-go/leader_election.md)
   * [Third Party Libraries]()
     * [Cobra](kubernetes/3rdparty/cobra.md)
     * [Limiter](kubernetes/3rdparty/limiter.md)
