@@ -4,6 +4,10 @@
 
 ![Informer Overview](./images/informer_overview.svg)
 
+## SharedInformerFactory 全景图
+
+![Shared Informer Factory](./images/shared_informer_factory_mind.png)
+
 ## sharedInformerFactory
 
 - 启动分发机制
