@@ -3,6 +3,7 @@
 * [Scheme](scheme.md)
 * [Serializer](serializer.md)
 * [Feature](feature.md)
+* [ObjectReference](object_reference.md)
 * [Server](server.md)
 * [Health](health.md)
 
