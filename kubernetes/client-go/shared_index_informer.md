@@ -103,3 +103,19 @@ defer func() {
 ```go
 s.controller.Run(stopCh)
 ```
+
+执行结束后的数据结构如下图：
+
+![Controller Run Overview](./images/controller_run_ds.svg)
+
+在 Run 内部，启动了 Reflector.Run 协程：
+
+```go
+wg.StartWithChannel(stopCh, r.Run)
+```
+
+并每秒执行一次 controller.processLoop：
+
+```go
+wait.Until(c.processLoop, time.Second, stopCh)
+```
