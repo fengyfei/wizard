@@ -38,6 +38,35 @@ func (f *sharedInformerFactory) Start(stopCh <-chan struct{}) {
 
 通过 chan 控制协程运行，是 go 常用策略。
 
+- WaitForCacheSync
+
+```go
+func (f *sharedInformerFactory) WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool {
+	informers := func() map[reflect.Type]cache.SharedIndexInformer {
+		f.lock.Lock()
+		defer f.lock.Unlock()
+
+		// 获取已经启动的 informer
+		informers := map[reflect.Type]cache.SharedIndexInformer{}
+		for informerType, informer := range f.informers {
+			if f.startedInformers[informerType] {
+				informers[informerType] = informer
+			}
+		}
+		return informers
+	}()
+
+	res := map[reflect.Type]bool{}
+	// 等待全部 informer 同步
+	for informType, informer := range informers {
+		res[informType] = cache.WaitForCacheSync(stopCh, informer.HasSynced)
+	}
+	return res
+}
+```
+
+具体的同步操作，请看 [SharedIndexInformer](./shared_index_informer.md)。
+
 ## References
 
 - [Factory Method Pattern](https://en.wikipedia.org/wiki/Factory_method_pattern)
