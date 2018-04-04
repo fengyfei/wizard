@@ -174,8 +174,14 @@ entity-header = Allow              // 服务端通知客户端能够支持 Reque
                 | extension-header // 允许定义额外的 entity-header 域而不改变协议，但不能假设接收方认识这些域。接收方应该忽略未识别的头域，但透明代理必须转发它
 ```
 
+## chunked response
+
+HTTP 1.1 协议在 header 中引入 Transfer-Encoding，当其值为 chunked 时, 表明采用 chunked 编码方式来进行报文体的传输。chunked 编码的基本方法是将大块数据分解成多块小数据，每块都可以自定长度。此方法可以动态响应数据(长度未知的数据)。
+
 ## References
 
 - [RFC2616](https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html)
 - [wikipedia uri](https://zh.wikipedia.org/wiki/%E7%BB%9F%E4%B8%80%E8%B5%84%E6%BA%90%E6%A0%87%E5%BF%97%E7%AC%A6)
 - 《图解HTTP》
+- [Chunked transfer encoding - 分块传输编码 wiki](https://zh.wikipedia.org/wiki/%E5%88%86%E5%9D%97%E4%BC%A0%E8%BE%93%E7%BC%96%E7%A0%81)
+- [RFC 2616 - Chunked Transfer Coding](https://tools.ietf.org/html/rfc2616#section-3.6.1)

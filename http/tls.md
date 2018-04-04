@@ -177,7 +177,7 @@ struct {
 
 这条消息将客户端的功能和首选项传送给服务器。
 
-![image](images/wireshark-clienthello.png)
+![image](https://github.com/fengyfei/wizard/raw/master/http/images/wireshark-clienthello.png)
 
 - Version: 协议版本（protocol version）指示客户端支持的最佳协议版本
 - Random: 一个 32 字节数据，28字节是随机生成的(图中的 Random Bytes)；剩余的4字节包含额外的信息，与客户端时钟有关(图中使用的是 GMT Unix Time)。在握手时，客户端和服务器都会提供随机数，客户端的暂记作 random_C (用于后续的密钥的生成)。这种随机性对每次握手都是独一无二的，在身份验证中起着举足轻重的作用。它可以防止[重放攻击](https://zh.wikipedia.org/wiki/%E9%87%8D%E6%94%BE%E6%94%BB%E5%87%BB)，并确认初始数据交换的完整性。
@@ -190,7 +190,7 @@ struct {
 
 是将服务器选择的连接参数传送回客户端。
 
-![image](images/wireshark-serverhello.png)
+![image](https://github.com/fengyfei/wizard/raw/master/http/images/wireshark-serverhello.png)
 
 这个消息的结构与 ClientHello 类似，只是每个字段只包含一个选项，其中包含服务端的 random_S 参数(用于后续的密钥协商)。服务器无需支持客户端支持的最佳版本。如果服务器不支持与客户端相同的版本，可以提供某个其他版本以期待客户端能够接受
 
@@ -198,7 +198,7 @@ struct {
 
 典型的 Certificate 消息用于携带服务器 X.509 [证书链](https://zh.wikipedia.org/wiki/%E4%BF%A1%E4%BB%BB%E9%8F%88)。服务器必须保证它发送的证书与选择的算法套件一致。比方说，公钥算法与套件中使用的必须匹配。除此以外，一些密钥交换算法依赖嵌入证书的特定数据，而且要求证书必须以客户端支持的算法签名。所有这些都表明服务器需要配置多个证书（每个证书可能会配备不同的证书链）。
 
-![image](images/wireshark-certificate.png)
+![image](https://github.com/fengyfei/wizard/raw/master/http/images/wireshark-certificate.png)
 
 Certificate消息是可选的，因为并非所有套件都使用身份验证，也并非所有身份验证方法都需要证书。更进一步说，虽然消息默认使用X.509证书，但是也可以携带其他形式的标志；一些套件就依赖[PGP密钥](https://zh.wikipedia.org/wiki/PGP)
 
@@ -208,7 +208,7 @@ Certificate消息是可选的，因为并非所有套件都使用身份验证，
 服务器密钥交换消息仅在服务器证书消息（如果发送）不包含足够的数据以允许客户端交换预主secret（premaster secret）时才由服务器发送。
 比如基于 DH 的证书，公钥不被证书中包含，需要单独发送
 
-![image](images/wireshark-serverhellodone.png)
+![image](https://github.com/fengyfei/wizard/raw/master/http/images/wireshark-serverhellodone.png)
 
 5.1.5 **ServerHelloDone**
 
@@ -224,7 +224,7 @@ Certificate消息是可选的，因为并非所有套件都使用身份验证，
 
 5.1.7 **ClientKeyExchange**
 
-![image](images/wireshark-clientkeychange.png)
+![image](https://github.com/fengyfei/wizard/raw/master/http/images/wireshark-clientkeychange.png)
 
 合法性验证通过之后，客户端计算产生随机数字的预主密钥（Pre-master），并用证书公钥加密，发送给服务器并携带客户端为密钥交换提供的所有信息。这个消息受协商的密码套件的影响，内容随着不同的协商密码套件而不同。
 
@@ -259,7 +259,7 @@ verify_data = PRF(master_secret, finished_label, Hash(handshake_messages))
 
 5.1.11 **change_cipher_spec**
 
-![image](images/wireshark-serverchangecipher.png)
+![image](https://github.com/fengyfei/wizard/raw/master/http/images/wireshark-serverchangecipher.png)
 
 服务端验证通过之后，服务器同样发送 change_cipher_spec 以告知客户端后续的通信都采用协商的密钥与算法进行加密通信（图中多了一步 New Session Ticket，此为会话票证，会在会话恢复中解释）;
 
@@ -275,7 +275,7 @@ verify_data = PRF(master_secret, finished_label, Hash(handshake_messages))
 
 开始使用协商密钥与算法进行加密通信。
 
-![image](images/wireshark-applicationdata.png)
+![image](https://github.com/fengyfei/wizard/raw/master/http/images/wireshark-applicationdata.png)
 
 #### 5.2 客户端身份验证
 
