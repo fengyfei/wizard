@@ -4,9 +4,51 @@ Cobra 是用于创建 CLI 应用程序的库，同时提供了用于生成应用
 
 非常多有名的开源项目都在使用它：
 
-[Kubernetes](http://kubernetes.io/)、[Hugo](http://gohugo.io)、[rkt](https://github.com/coreos/rkt)、[etcd](https://github.com/coreos/etcd)、[Moby (former Docker)](https://github.com/moby/moby)、[Docker (distribution)](https://github.com/docker/distribution)、[OpenShift](https://www.openshift.com/)、[Delve](https://github.com/derekparker/delve)、[GopherJS](http://www.gopherjs.org/)、[CockroachDB](http://www.cockroachlabs.com/)、[Bleve](http://www.blevesearch.com/)、[ProjectAtomic (enterprise)](http://www.projectatomic.io/)、[GiantSwarm's swarm](https://github.com/giantswarm/cli)、[Nanobox](https://github.com/nanobox-io/nanobox)/[Nanopack](https://github.com/nanopack)、[rclone](http://rclone.org/)、[nehm](https://github.com/bogem/nehm)、[Pouch](https://github.com/alibaba/pouch)
+* [Kubernetes](http://kubernetes.io/)
+* [Hugo](http://gohugo.io)
+* [rkt](https://github.com/coreos/rkt)
+* [etcd](https://github.com/coreos/etcd)
+* [Moby (former Docker)](https://github.com/moby/moby)
+* [Docker (distribution)](https://github.com/docker/distribution)
+* [OpenShift](https://www.openshift.com/)
+* [Delve](https://github.com/derekparker/delve)
+* [GopherJS](http://www.gopherjs.org/)
+* [CockroachDB](http://www.cockroachlabs.com/)
+* [Bleve](http://www.blevesearch.com/)
+* [ProjectAtomic (enterprise)](http://www.projectatomic.io/)
+* [GiantSwarm's swarm](https://github.com/giantswarm/cli)
+* [Nanobox](https://github.com/nanobox-io/nanobox)/[Nanopack](https://github.com/nanopack)
+* [rclone](http://rclone.org/)
+* [nehm](https://github.com/bogem/nehm)
+* [Pouch](https://github.com/alibaba/pouch)
 
-## Example
+## 命令、子命令、参数与标志性参数
+
+命令表示动作，参数是事物，标志是这些动作的修饰符。
+
+### 命令与子命令
+
+以 docker 为例，docker 是一个命令，`docker pull` 中的 pull 就是 docker 的子命令。
+
+为什么有子命令这样的设计呢？
+
+> 假设，我们将 docker 拆分成 docker-version、docker-ps、docker-pull 等等，那么它们共用的很多代码都得编译多次大大增加了可执行文件的总大小。在升级时，改动公有代码得多次改动，分发时得多次分发，不易维护同时增加了出错的概率。
+
+### 参数与标志性参数
+
+同样以 docker 为例，`docker rmi mysql mongo` 的 mysql 和 mongo 都是 docker rmi 命令的参数。
+
+那么什么是标志性参数呢？
+
+> 看这一条命令 `docker run --name some-mysql -e MYSQL_ROOT_PASSWORD=my-secret-pw -d mysql` 中的 `--name some-mysql`、`-e MYSQL_ROOT_PASSWORD=my-secret-pw`、`-d` 均为标志性参数。
+
+那非标志性和标志性参数有什么区别呢？
+
+> 看 `docker rm mysql mongo` 参数(mysql、mongo)对于命令(docker rmi)来说并没有什么区别(除移除的顺序)，更不会改变 `docker rmi` 这一命令的行为有任何影响。而标志性参数(-e MYSQL_ROOT_PASSWORD=my-secret-pw 等)则会对命令(docker run)的运行造成影响。
+
+> 如果不能理解，再举一例 `docker rm job1 job2` 和 `docker rm -f job1 job2`，-f 是一个标志性参数，它有默认值为 true，-f 等同于 -f=1。如果 job1 和 job2 正在运行，则 `docker rm job1 job2` 不能将它们移除，而 `docker rm -f job1 job2` 可以将他们强制移除。由此看来，标志性参数往往具有特殊意义，可以对命令的行为。
+
+## Cobra 的使用
 
 这里有一个多层嵌套的例子，[example](https://github.com/spf13/cobra/blob/master/README.md#example)：
 
@@ -81,61 +123,34 @@ a count and a string.`,
 }
 ```
 
+![cobra](images/cobra.png)
+
+这个命令是这样的，print 和 echo 都是 app 的子命令，并且行为相同都是输出 “Print: 参数”。times 是 echo 的子参数，它有一个标志性参数，默认值是 1，它会输出 x 次（-t x）“Echo: 参数”。所有命令最后都会将所有的标志性参数输出。
+
 ```shell
 $go build -o app basic.go
+
+$./app print 123456
+Print: 123456
+FLAG: --help="false"
+
 $./app echo 123456
 Print: 123456
 FLAG: --help="false"
-$./app echo 123456
-Print: 123456
+
+$./app echo times 123456
+Echo: 123456
 FLAG: --help="false"
-./app echo times 123456 -t 3
+FLAG: --times="1"
+
+$./app echo times 123456 -t 3
 Echo: 123456
 Echo: 123456
 Echo: 123456
 FLAG: --help="false"
 FLAG: --times="3"
+
+$./app times 123456
+Error: unknown command "times" for "app"
+Run 'app --help' for usage.
 ```
-
-## Kubernetes
-
-```go
-    // 默认的标志类参数，用于在后面设置
-    s := options.NewKubeControllerManagerOptions()
-    command := &cobra.Command{
-        Use: "kube-xxx",
-        Long: ``,
-        Run: func(cmd *cobra.Command, args []string) {
-            // 有 -version 参数，输出并退出
-            verflag.PrintAndExitIfRequested()
-            // 打印日志
-            utilflag.PrintFlags(cmd.Flags())
-
-            if err := Run(c.Complete()); err != nil {
-                fmt.Fprintf(os.Stderr, "%v\n", err)
-                os.Exit(1)
-            }
-        },
-    }
-    // 给 cmd 设置标志类参数
-    s.AddFlags(cmd.Flags(), KnownControllers(), ControllersDisabledByDefault.List())
-
-    // 设置正常化函数处理参数下标
-    pflag.CommandLine.SetNormalizeFunc(utilflag.WordSepNormalizeFunc)
-    // 将 goflag.CommandLine 里的参数添加到 pflag.CommandLine 中
-    pflag.CommandLine.AddGoFlagSet(goflag.CommandLine)
-
-    logs.InitLogs()
-    defer logs.FlushLogs()
-
-        // 运行
-        if err := command.Execute(); err != nil {
-        fmt.Fprintf(os.Stderr, "%v\n", err)
-        os.Exit(1)
-    }
-```
-
-什么是标志类参数？
-
-* [https://golang.org/pkg/flag/](https://golang.org/pkg/flag/)
-* [https://gobyexample.com/command-line-flags](https://gobyexample.com/command-line-flags)
