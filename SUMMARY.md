@@ -106,6 +106,7 @@
   * [Controller](kubernetes/controller/index.md)
     * [Bootstrap](kubernetes/controller/bootstrap.md)
   * [Scheduler](kubernetes/scheduler/index.md)
+    * [Configuration](kubernetes/scheduler/configuration.md)
     * [Algorithm](kubernetes/scheduler/algorithm.md)
 * [Blockchain](blockchain/index.md)
   * [The Basic of Bitcoin](blockchain/the-basic-of-bitcoin.md)
