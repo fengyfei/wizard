@@ -46,21 +46,19 @@ type EventRecorder interface {
 
 ## EventBroadcaster
 
+### 核心结构
+
 来看一下 EventBroadcaster 实例关系图：
 
 ![Event Broadcaster Instance](./images/events_broadcaster.svg)
 
-### Broadcaster
+#### Broadcaster
 
 从上图不难看出，Broadcaster 结构是所有实现的核心。
 
 首先 eventBroadcasterImpl 和 recorderImpl均包含匿名 Broadcaster 引用，那么就意味着 Broadcaster 所有共有方法，可被这两个对象直接使用。
 
-其次，Broadcaster 处于关系的中轴位置，关联起其他对象。
-
-下面来看看主要的方法
-
-- loop
+其次，Broadcaster 处于关系的中轴位置，关联起其他对象。在创建 Broadcaster 对象时，同时启动了事件分发协程 loop：
 
 ```go
 func (m *Broadcaster) loop() {
@@ -95,44 +93,7 @@ func (m *Broadcaster) Action(action EventType, obj runtime.Object) {
 }
 ```
 
-### 接口实现
-
-- StartEventWatcher
-
-```go
-func (eventBroadcaster *eventBroadcasterImpl) StartEventWatcher(eventHandler func(*v1.Event)) watch.Interface {
-	// 创建 watcher，满足 watch.Interface 接口
-	watcher := eventBroadcaster.Watch()
-
-	// 事件处理 goroutine
-	go func() {
-		defer utilruntime.HandleCrash()
-		for {
-			watchEvent, open := <-watcher.ResultChan()
-
-			// chan 已关闭
-			if !open {
-				return
-			}
-
-			// 事件类型转换
-			event, ok := watchEvent.Object.(*v1.Event)
-			if !ok {
-				// 保护性代码，不应该执行到此
-				continue
-			}
-
-			// 处理事件
-			eventHandler(event)
-		}
-	}()
-	return watcher
-}
-```
-
-注意上面的实现，是 go 常用的模式之一。在方法内部启动 goroutine，可隐藏实现细节。同时，通过直接或间接返回控制 chan，外部代码可通过关闭 chan 来中断内部 goroutine 的执行。
-
-### EventRecorder
+#### EventRecorder
 
 EventRecorder 的实例为 recorderImpl，定义如下：
 
@@ -173,4 +134,47 @@ func (recorder *recorderImpl) generateEvent(object runtime.Object, timestamp met
 }
 ```
 
-请参照 [ObjectReference](../general/object_reference.md)
+请参照 [ObjectReference](../general/object_reference.md)。
+
+### StartEventWatcher
+
+StartEventWatcher 被用于创建事件观察者，起到承上启下的作用。
+
+```go
+func (eventBroadcaster *eventBroadcasterImpl) StartEventWatcher(eventHandler func(*v1.Event)) watch.Interface {
+	// 创建 watcher，满足 watch.Interface 接口
+	watcher := eventBroadcaster.Watch()
+
+	// 事件处理 goroutine
+	go func() {
+		defer utilruntime.HandleCrash()
+		for {
+			watchEvent, open := <-watcher.ResultChan()
+
+			// chan 已关闭
+			if !open {
+				return
+			}
+
+			// 事件类型转换
+			event, ok := watchEvent.Object.(*v1.Event)
+			if !ok {
+				// 保护性代码，不应该执行到此
+				continue
+			}
+
+			// 处理事件
+			eventHandler(event)
+		}
+	}()
+	return watcher
+}
+```
+
+注意上面的实现，是 go 常用的模式之一。在方法内部启动 goroutine，可隐藏实现细节。同时，通过直接或间接返回控制 chan，外部代码可通过关闭 chan 来中断内部 goroutine 的执行。
+
+### 场景分析
+
+#### StartRecordingToSink
+
+![Start Recording To Sink](./images/start_recording_to_sink.svg)
