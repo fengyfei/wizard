@@ -93,6 +93,7 @@
     * [Server](kubernetes/general/server.md)
     * [Health](kubernetes/general/health.md)
     * [Filters](kubernetes/general/filters.md)
+    * [Selector](Kubernetes/general/selectors.md)
   * [Client](kubernetes/client-go/index.md)
     * [Clientset](kubernetes/client-go/clientset.md)
     * [Event](kubernetes/client-go/event.md)

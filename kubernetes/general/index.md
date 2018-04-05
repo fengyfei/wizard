@@ -6,6 +6,8 @@
 * [ObjectReference](object_reference.md)
 * [Server](server.md)
 * [Health](health.md)
+* [Filters](filters.md)
+* [Selector](selectors.md)
 
 # References
 
