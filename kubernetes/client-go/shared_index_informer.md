@@ -119,3 +119,7 @@ wg.StartWithChannel(stopCh, r.Run)
 ```go
 wait.Until(c.processLoop, time.Second, stopCh)
 ```
+
+执行完毕后如下图：
+
+![Controller Run Procedure Overview](./images/controller_run_procedure.svg)
