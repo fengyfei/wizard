@@ -107,6 +107,7 @@
   * [Scheduler](kubernetes/scheduler/index.md)
     * [Configuration](kubernetes/scheduler/configuration.md)
     * [Algorithm](kubernetes/scheduler/algorithm.md)
+  * [Kubelet](kubernetes/kubelet/index.md)
 * [Blockchain](blockchain/index.md)
   * [The Basic of Bitcoin](blockchain/the-basic-of-bitcoin.md)
   * [Transaction and Scripts of Bitcoin](blockchain/transaction-and-scripts-of-bitcoin.md)
