@@ -107,6 +107,7 @@
   * [Controller](kubernetes/controller/controller.md)
   * [Scheduler](kubernetes/scheduler/index.md)
     * [Configuration](kubernetes/scheduler/configuration.md)
+    * [Scheduler](kubernetes/scheduler/scheduler.md)
     * [Algorithm](kubernetes/scheduler/algorithm.md)
   * [Kubelet](kubernetes/kubelet/index.md)
 * [Blockchain](blockchain/index.md)
