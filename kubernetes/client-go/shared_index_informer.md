@@ -124,6 +124,51 @@ wait.Until(c.processLoop, time.Second, stopCh)
 
 ![Controller Run Procedure Overview](./images/controller_run_procedure.svg)
 
+## 数据流向
+
 全局的数据流向图如下：
 
 ![Informer Data Flow](./images/informer_data_flow.svg)
+
+在 controller.Run 方法的最后，启动了一个每秒执行一次的 processLoop 循环，该方法实现了从 DeltaFIFO 向 Indexer 与 Processor 发送数据。来看具体代码：
+
+```go
+func (s *sharedIndexInformer) HandleDeltas(obj interface{}) error {
+	s.blockDeltas.Lock()
+	defer s.blockDeltas.Unlock()
+
+	// 遍历对象
+	for _, d := range obj.(Deltas) {
+		switch d.Type {
+		case Sync, Added, Updated:
+			isSync := d.Type == Sync
+			// cacheMutationDetector 添加对象
+			s.cacheMutationDetector.AddObject(d.Object)
+
+			// 更改或新建对象
+			if old, exists, err := s.indexer.Get(d.Object); err == nil && exists {
+				if err := s.indexer.Update(d.Object); err != nil {
+					return err
+				}
+				// 分发
+				s.processor.distribute(updateNotification{oldObj: old, newObj: d.Object}, isSync)
+			} else {
+				if err := s.indexer.Add(d.Object); err != nil {
+					return err
+				}
+				// 分发
+				s.processor.distribute(addNotification{newObj: d.Object}, isSync)
+			}
+		case Deleted:
+			// indexer 处理
+			if err := s.indexer.Delete(d.Object); err != nil {
+				return err
+			}
+
+			// 事件分发至 processor
+			s.processor.distribute(deleteNotification{oldObj: d.Object}, false)
+		}
+	}
+	return nil
+}
+```
