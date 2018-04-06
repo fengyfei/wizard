@@ -1,10 +1,14 @@
 {
   "plugins": [
   	"expandable-chapters",
-  	"include-codeblock"
+  	"include-codeblock",
+    "page-toc"
   ],
   "pluginsConfig": {
-     "expandable-chapters":{}
+     "expandable-chapters":{},
+     "selector": ".markdown-section h1, .markdown-section h2, .markdown-section h3, .markdown-section h4",
+     "position": "before-first",
+     "showByDefault": true
   },
   "include-codeblock": {
     "template": "ace",
