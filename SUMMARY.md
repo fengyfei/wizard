@@ -110,6 +110,8 @@
     * [Scheduler](kubernetes/scheduler/scheduler.md)
     * [Algorithm](kubernetes/scheduler/algorithm.md)
     * [Generic Scheduler](kubernetes/scheduler/generic_scheduler.md)
+  * [Proxy](kubernetes/proxy/index.md)
+  * [APIServer](kubernetes/apiserver/index.md)
   * [Kubelet](kubernetes/kubelet/index.md)
 * [Blockchain](blockchain/index.md)
   * [The Basic of Bitcoin](blockchain/the-basic-of-bitcoin.md)
