@@ -205,7 +205,7 @@ go func() {
 	}()
 ```
 
-关于算法调度，将在 [Algorithm](algorithm.md) 中说明。
+关于算法调度，将在 [Generic Scheduler](generic_scheduler.md) 中说明。
 
 ## References
 
