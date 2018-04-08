@@ -122,3 +122,4 @@
   * [Merkle Patricia Tree](blockchain/merkle-patricia-tree.md)
 * [JavaScript]()
   * [Scope](JavaScript/scope.md)
+  * [Closure](JavaScript/closure.md)
