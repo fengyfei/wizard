@@ -111,6 +111,8 @@
     * [Algorithm](kubernetes/scheduler/algorithm.md)
     * [Generic Scheduler](kubernetes/scheduler/generic_scheduler.md)
   * [Proxy](kubernetes/proxy/index.md)
+    * [iptables](kubernetes/proxy/iptables.md)
+    * [lvs](kubernetes/proxy/lvs.md)
   * [APIServer](kubernetes/apiserver/index.md)
   * [Kubelet](kubernetes/kubelet/index.md)
 * [Blockchain](blockchain/index.md)
