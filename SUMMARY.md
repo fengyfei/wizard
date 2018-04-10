@@ -104,7 +104,7 @@
   * [Third Party Libraries]()
     * [Cobra](kubernetes/3rdparty/cobra.md)
     * [Limiter](kubernetes/3rdparty/limiter.md)
-  * [Controller](kubernetes/controller/controller.md)
+  * [Controller](kubernetes/controller/index.md)
   * [Scheduler](kubernetes/scheduler/index.md)
     * [Configuration](kubernetes/scheduler/configuration.md)
     * [Scheduler](kubernetes/scheduler/scheduler.md)
