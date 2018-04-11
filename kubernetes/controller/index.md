@@ -26,4 +26,4 @@
 
 ![service account informer](images/service-account-informer.svg)
 
-细节请看: [informer factory](../client-go/informer_factory.md)
+细节请看: [Informer Factory](../client-go/informer_factory.md)
