@@ -3,6 +3,8 @@
 * [Introduction](README.md)
 * [Titan](titan/index.md)
   * [Golang](titan/go.md)
+  * [Kubernetes](titan/kubernetes.md)
+  * [IPFS](titan/ipfs.md)
 * [git 源码阅读](git/index.md)
   * [数据结构]()
     * [Object](git/object.md)
