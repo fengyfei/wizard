@@ -68,6 +68,10 @@ serviceUpdateResult := proxy.UpdateServiceMap(proxier.serviceMap, proxier.servic
 
 ![Service Map Apply](./images/service_map_apply.svg)
 
+确保以下 table 上自定义链存在，如果不存在，创建：
+
+![Custom Chains](./images/proxier_iptables_rules.svg)
+
 ## References
 
 - [IP Sysctl Options](https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt)
