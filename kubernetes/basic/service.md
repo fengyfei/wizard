@@ -1,6 +1,10 @@
 # Service
 
-## 为什么有 Service
+Controller 在动态管理 pod 的过程中，总有旧的 pod 被销毁，新的 pod 被创建，pod 的 IP 在这时就会发生改变。Service 是一个 pod 的逻辑分组，一种可以访问它们的策略，service 的 IP 不易改变。外部只需通过 service 的 IP 获取服务，内部会将流量代理到 pod 上。
+
+![Service, Replication Controller and Pod](images/service-replication-controller-pod.png)
+
+<!-- ## 为什么有 Service
 
 Kubernetes Pod 是有生命周期的，它们可以被创建，也可以被销毁，然而一旦被销毁生命就永远结束。通过 Replication Controller 能够动态地创建和销毁 Pod（例如，需要进行扩缩容，或者执行滚动升级）。每个 Pod 都会获取它自己的 IP 地址，即使这些 IP 地址不总是稳定可依赖的。 这会导致一个问题：如果一组 Pod（称为 backend）为其它 Pod（称为 frontend）提供服务，那么那些 frontend 该如何发现，并连接到这组 Pod 中的哪些 backend 呢？
 
@@ -85,7 +89,7 @@ spec:
   externalName: my.database.example.com
 ```
 
-访问这种服务的方式与其他服务一样，唯一的区别在于重定向发生在 DNS 级，并且没有代理或转发发生。
+访问这种服务的方式与其他服务一样，唯一的区别在于重定向发生在 DNS 级，并且没有代理或转发发生。 -->
 
 ## 虚拟 IP 和服务代理
 
@@ -93,7 +97,7 @@ Kubernetes 群集中的每个节点都运行一个 kube-proxy。kube-proxy 负�
 
 ### userspace
 
-在此模式下，kube-proxy 监视 Kubernetes 主服务器以添加和删除 Service 和 Endpoints 对象。对于每个服务，它会在本地节点上打开一个端口（随机选择）。与此“代理端口”的任何连接都将代理到 Service 的其中的一个 Pod（如端点中所报告的）。使用哪个后端 Pod 是根据 Service 的 SessionAffinity 决定。最后，它安装 iptables 规则，该规则将流量捕获到 Service 的 clusterIP（虚拟的）和 Port，并将该流量重定向到代理后端 Pod 的代理端口。默认情况下，后端的选择是循环算法。
+<!-- 在此模式下，kube-proxy 监视 Kubernetes 主服务器以添加和删除 Service 和 Endpoints 对象。对于每个服务，它会在本地节点上打开一个端口（随机选择）。与此“代理端口”的任何连接都将代理到 Service 的其中的一个 Pod（如端点中所报告的）。使用哪个后端 Pod 是根据 Service 的 SessionAffinity 决定。最后，它安装 iptables 规则，该规则将流量捕获到 Service 的 clusterIP（虚拟的）和 Port，并将该流量重定向到代理后端 Pod 的代理端口。默认情况下，后端的选择是循环算法。 -->
 
 ![Proxy-mode: userspace](images/service-userspace-proxy.png)
 
@@ -101,9 +105,9 @@ Kubernetes 群集中的每个节点都运行一个 kube-proxy。kube-proxy 负�
 
 ### iptables
 
-在此模式下，kube-proxy 监视 Kubernetes 主服务器以添加和删除 Service 和 Endpoints 对象。对于每个 Service，它都会安装 iptables 规则，这些规则将流量捕获到 Service 的 clusterIP（虚拟的）和 Port，并将该流量重定向到服务的后端集合中的一个。对于每个 Endpoints 对象，它都会安装选择后端 Pod 的 iptables 规则。默认情况下，选择的方法是随机的。
+<!-- 在此模式下，kube-proxy 监视 Kubernetes 主服务器以添加和删除 Service 和 Endpoints 对象。对于每个 Service，它都会安装 iptables 规则，这些规则将流量捕获到 Service 的 clusterIP（虚拟的）和 Port，并将该流量重定向到服务的后端集合中的一个。对于每个 Endpoints 对象，它都会安装选择后端 Pod 的 iptables 规则。默认情况下，选择的方法是随机的。
 
-显然，iptables 不需要在用户空间和内核空间之间切换，它应该比 userspace 代理更快，更可靠。然而，与 userspace 代理器不同，如果最初选择 Pod 的不响应，iptables 代理器不能自动重试连接另一个 Pod，因此它依赖于正在工作的 [readiness probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#defining-readiness-probes)。
+显然，iptables 不需要在用户空间和内核空间之间切换，它应该比 userspace 代理更快，更可靠。然而，与 userspace 代理器不同，如果最初选择 Pod 的不响应，iptables 代理器不能自动重试连接另一个 Pod，因此它依赖于正在工作的 [readiness probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#defining-readiness-probes)。 -->
 
 ![Proxy-mode: iptables](images/service-iptables-proxy.png)
 
@@ -113,6 +117,13 @@ Kubernetes 群集中的每个节点都运行一个 kube-proxy。kube-proxy 负�
 
 `Kubernetes v1.9 beta`
 
-在此模式下，Kubernetes Services 和 Endpoints 调用 netlink 接口来相应地创建ipvs规则，并定期与Kubernetes Services和Endpoints同步ipvs规则，以确保ipvs状态与预期一致。当访问服务时，流量将被重定向到其中一个后端Pod。
+<!-- 在此模式下，Kubernetes Services 和 Endpoints 调用 netlink 接口来相应地创建 ipvs 规则，并定期与 Kubernetes Services 和 Endpoints 同步 ipvs 规则，以确保 ipvs 状态与预期一致。当访问服务时，流量将被重定向到其中一个后端 Pod。 -->
 
 ![Proxy-mode: ipvs](images/service-ipvs-proxy.png)
+
+## 服务发现
+
+Kubernetes 支持两种主要的服务发现模式：环境变量和 DNS
+
+* 环境变量：
+* DNS：
