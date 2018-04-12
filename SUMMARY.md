@@ -76,6 +76,7 @@
   * [Foundation](kubernetes/foundation/index.md)
     * [CRI](kubernetes/foundation/cri.md)
   * [General](kubernetes/general/index.md)
+    * [Common Objects](kubernetes/general/object.md)
     * [Scheme](kubernetes/general/scheme.md)
     * [Serializer](kubernetes/general/serializer.md)
     * [Feature](kubernetes/general/feature.md)
