@@ -107,6 +107,7 @@
     * [lvs](kubernetes/proxy/lvs.md)
   * [APIServer](kubernetes/apiserver/index.md)
     * [HTTP Server](kubernetes/apiserver/http.md)
+    * [Storage](kubernetes/apiserver/storage.md)
   * [Kubelet](kubernetes/kubelet/index.md)
 * [Blockchain](blockchain/index.md)
   * [The Basic of Bitcoin](blockchain/the-basic-of-bitcoin.md)
