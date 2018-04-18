@@ -2,6 +2,6 @@
 
 ## Storage Factory
 
-### Overview
+### Default Storage Factory
 
-![Storage Factory Overview](./images/legacy_rest_storage_provider.svg)
+![Storage Factory Overview](./images/apiserver_default_factory.svg)

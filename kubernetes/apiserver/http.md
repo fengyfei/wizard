@@ -13,3 +13,7 @@
 ### 配置文件结构
 
 ![API Server Config Overview](./images/api_server_config_overview.svg)
+
+### REST Options
+
+![API Server Rest Options Getter](./images/api_server_rest_options_getter.svg)

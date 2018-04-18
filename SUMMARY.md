@@ -109,6 +109,7 @@
     * [Iptables Proxy Mode](kubernetes/proxy/iptables_proxy.md)
     * [lvs](kubernetes/proxy/lvs.md)
   * [APIServer](kubernetes/apiserver/index.md)
+    * [Configuration](kubernetes/apiserver/configuration.md)
     * [Storage](kubernetes/apiserver/storage.md)
     * [HTTP Server](kubernetes/apiserver/http.md)
   * [Kubelet](kubernetes/kubelet/index.md)
