@@ -1,6 +1,9 @@
+![image](images/rpc.svg)
+
+
 ### 1. server
 
-![image](https://github.com/fengyfei/wizard/raw/master/go/rpc/images/rpc_server.png)
+<!-- ![image](https://github.com/fengyfei/wizard/raw/master/go/rpc/images/rpc_server.png) -->
 
 service 与 server 结构体
 ```go
@@ -193,7 +196,7 @@ func (server *Server) HandleHTTP(rpcPath, debugPath string) {
 
 ### 2. client
 
-![image](https://github.com/fengyfei/wizard/raw/master/go/rpc/images/rpc_client.png)
+<!-- ![image](https://github.com/fengyfei/wizard/raw/master/go/rpc/images/rpc_client.png) -->
 
 结构体
 ```go

@@ -61,7 +61,7 @@ type Context interface {
 	// 我们通过 Done 方法收到这个信号后，就应该做清理操作，然后退出goroutine，释放资源
     Done() <-chan struct{}
     // 如果 Done 还没关闭，Err 返回 nil
-    // 如果 Done 以及关闭，返回非空 err，告知 Ctx 因何取消
+    // 如果 Done 已经关闭，返回非空 err，告知 Ctx 因何取消
     Err() error
     Value(key interface{}) interface{} // 键值对形式，与 Ctx 绑定，可以为空
 }

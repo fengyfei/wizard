@@ -333,7 +333,6 @@ Session ticket 需要服务器和客户端都支持，属于一个扩展字段�
 - [RFC 2246 - The TLS Protocol Version 1.0](https://www.ietf.org/rfc/rfc2246.txt)
 - [NPN/ALPN - wiki](https://zh.wikipedia.org/wiki/%E5%BA%94%E7%94%A8%E5%B1%82%E5%8D%8F%E8%AE%AE%E5%8D%8F%E5%95%86)
 - [MAC (Message authentication code) - 消息认证码](https://zh.wikipedia.org/wiki/%E8%A8%8A%E6%81%AF%E9%91%91%E5%88%A5%E7%A2%BC)
-- [PKI (Public Key Infrastructure)- 公开密钥基础设施](https://zh.wikipedia.org/wiki/%E5%85%AC%E9%96%8B%E9%87%91%E9%91%B0%E5%9F%BA%E7%A4%8E%E5%BB%BA%E8%A8%AD)
 - [TLS - wiki](https://zh.wikipedia.org/wiki/%E5%82%B3%E8%BC%B8%E5%B1%A4%E5%AE%89%E5%85%A8%E6%80%A7%E5%8D%94%E5%AE%9A)
 - [SSL/TLS in detail](https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc785811(v=ws.10))
 - [HTTPS加密协议详解](https://www.wosign.com/faq/faq2016-0309-02.htm)

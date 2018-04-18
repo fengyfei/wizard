@@ -115,6 +115,36 @@ CA 有时候会为同样的密钥签发多张证书，例如现在最常使用�
 
 在这个过程中 Charles 就是一个中间人，而且可以完全获取 HTTPS 信息，因为用户安装并信任它的证书，也就可以做到身份验证。
 
+> 可以看到加密协议下所有连接都是 Connect 形式，这涉及到[隧道协议 - Tunneling Protocol](https://zh.wikipedia.org/wiki/%E9%9A%A7%E9%81%93%E5%8D%8F%E8%AE%AE)的概念
+
+使用隧道的原因是在不兼容的网络上传输数据，或在不安全网络上提供一个安全路径。
+
+隧道通信的机制如下:
+
+```
+The client asks an HTTP Proxy server to tunnel the TCP connection to the desired destination.
+The server then proceeds to make the connection on behalf of the client. Once the connection has been established by the server,
+the Proxy server continues to proxy the TCP stream to and from the client.The client is now being proxied to the remote host.
+Any data sent to the proxy server is now forwarded, unmodified, to the remote host and the client can communicate using any protocol accepted by the remote host
+
+Proxy servers may also limit connections by only allowing connections to the default HTTPS port 443, whitelisting hosts, or blocking traffic which doesn't appear to be SSL.
+
+客户端先请求一个代理服务器去建立和目标服务器之间的 tcp tunnel，目标服务器尝试连接客户端(实际是代理服务器)，如果连接成功建立，代理服务器会给客户端返回 200 ok 并继续代理客户端和目标服务器之间的 tcp 流。
+任何发送给代理服务器的数据都会不加修改地被转发，远程主机和客户端可以通过任何协议(TLS、SSH、SOCKS、PPTP...)进行后续交互。
+
+代理服务器也可以通过端口限制(443)、host 白名单、阻止非 SSL 的数据流来限制连接
+```
+
+一些代理服务器需要认证信息来建立 tunnel. 常见的是 Proxy-Authorization 头域:
+
+```
+CONNECT server.example.com:80 HTTP/1.1
+Host: server.example.com:80
+Proxy-Authorization: basic aGVsbG86d29ybGQ=
+```
+
+关于这个中间代理的详细信息见 https://en.wikipedia.org/wiki/DMZ_(computing)
+
 ## 题外话
 
 讲到 Charles，不得不提另一个抓包工具 Wireshark。这两个工具的抓包原理不同，Charles 是通过代理过滤抓取本机的网络请求，主要抓 HTTP、HTTPS 的请求；
@@ -139,3 +169,7 @@ ARP（Address Resolution Protocol）即地址解析协议， 用于实现从 IP 
 - [MITM](https://zh.wikipedia.org/wiki/%E4%B8%AD%E9%97%B4%E4%BA%BA%E6%94%BB%E5%87%BB)
 - [数字证书 - wiki](https://zh.wikipedia.org/wiki/%E5%85%AC%E9%96%8B%E9%87%91%E9%91%B0%E8%AA%8D%E8%AD%89)
 - [数字签名 - wiki](https://zh.wikipedia.org/wiki/%E6%95%B8%E4%BD%8D%E7%B0%BD%E7%AB%A0)
+- [http tunnel](https://en.wikipedia.org/wiki/HTTP_tunnel)
+- [Tunneling protocol](https://en.wikipedia.org/wiki/Tunneling_protocol)
+- [代理服务器 - wiki](https://zh.wikipedia.org/wiki/%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1%E5%99%A8)
+- [反向代理 - wiki](https://zh.wikipedia.org/wiki/%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86)
