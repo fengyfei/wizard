@@ -1,4 +1,4 @@
-# HTTP Server
+# API Server
 
 ## 概览
 
@@ -16,9 +16,13 @@
 
 ![API Server Config Overview](./images/api_server_config_overview.svg)
 
-### 路由安装
+## Discovery Group Manager
 
-#### Legacy API 安装
+![Discovery Group Manager Overview](./images/discovery_group_manager.svg)
+
+## 路由安装
+
+### Legacy API 安装
 
 - RESTOptionsGetter 概览：
 
