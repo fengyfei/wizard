@@ -6,6 +6,8 @@
 
 ![HTTP Server Overview](./images/api_server_overview.svg)
 
+通过将 delegationTarget 注册给服务器链前端的 notFoundHandler，实现顺序访问。
+
 ### Hooks
 
 ![HTTP Server Hooks](./images/api_server_hooks.svg)
