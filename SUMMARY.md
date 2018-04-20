@@ -113,7 +113,6 @@
     * [Configuration](kubernetes/apiserver/configuration.md)
     * [Storage](kubernetes/apiserver/storage.md)
     * [HTTP Server](kubernetes/apiserver/http.md)
-    * [Negotiated Serializer](kubernetes/apiserver/negotiated_serializer.md)
     * [Extensions](kubernetes/apiserver/extensions.md)
   * [Kubelet](kubernetes/kubelet/index.md)
 * [Blockchain](blockchain/index.md)
