@@ -16,10 +16,6 @@
 
 ![API Server Config Overview](./images/api_server_config_overview.svg)
 
-## Discovery Group Manager
-
-![Discovery Group Manager Overview](./images/discovery_group_manager.svg)
-
 ## 路由安装
 
 ### Legacy API 安装
