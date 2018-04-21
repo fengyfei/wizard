@@ -50,10 +50,6 @@ if c.ExtraConfig.APIResourceConfigSource.VersionEnabled(apiv1.SchemeGroupVersion
 
 关于 StorageFactory 请看 [Storage](./storage.md) 章节。
 
-- RESTStorageProvider 概览
-
-![REST Storage Provider Overview](./images/rest_storage_provider_overview.svg)
-
 - LegacyRESTStorageProvider 概览
 
 ![Legacy REST Storage Provider Overview](./images/legacy_rest_storage_provider_overview.svg)
@@ -93,3 +89,36 @@ APIGroupVersion 生成后，直接安装路由：
 ```go
 if err := apiGroupVersion.InstallREST(s.Handler.GoRestfulContainer); err != nil {
 ```
+
+### 普通路由安装
+
+```go
+restStorageProviders := []RESTStorageProvider{
+	authenticationrest.RESTStorageProvider{Authenticator: c.GenericConfig.Authentication.Authenticator},
+	authorizationrest.RESTStorageProvider{Authorizer: c.GenericConfig.Authorization.Authorizer, RuleResolver: c.GenericConfig.RuleResolver},
+	autoscalingrest.RESTStorageProvider{},
+	batchrest.RESTStorageProvider{},
+	certificatesrest.RESTStorageProvider{},
+	extensionsrest.RESTStorageProvider{},
+	networkingrest.RESTStorageProvider{},
+	policyrest.RESTStorageProvider{},
+	rbacrest.RESTStorageProvider{Authorizer: c.GenericConfig.Authorization.Authorizer},
+	schedulingrest.RESTStorageProvider{},
+	settingsrest.RESTStorageProvider{},
+	storagerest.RESTStorageProvider{},
+	// keep apps after extensions so legacy clients resolve the extensions versions of shared resource names.
+	// See https://github.com/kubernetes/kubernetes/issues/42392
+	appsrest.RESTStorageProvider{},
+	admissionregistrationrest.RESTStorageProvider{},
+	eventsrest.RESTStorageProvider{TTL: c.ExtraConfig.EventTTL},
+}
+m.InstallAPIs(c.ExtraConfig.APIResourceConfigSource, c.GenericConfig.RESTOptionsGetter, restStorageProviders...)
+```
+
+- RESTStorageProvider 概览
+
+![REST Storage Provider Overview](./images/rest_storage_provider_overview.svg)
+
+实例图如下（完整版请参照代码）：
+
+![REST Storage Provider Instance](./images/rest_storage_instances.svg)
