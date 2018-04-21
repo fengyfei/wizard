@@ -28,6 +28,28 @@
 
 ![API Server Rest Options Getter](./images/api_server_rest_options_getter.svg)
 
+安装路由代码：
+
+```go
+// install legacy rest storage
+if c.ExtraConfig.APIResourceConfigSource.VersionEnabled(apiv1.SchemeGroupVersion) {
+	legacyRESTStorageProvider := corerest.LegacyRESTStorageProvider{
+		StorageFactory:             c.ExtraConfig.StorageFactory,
+		ProxyTransport:             c.ExtraConfig.ProxyTransport,
+		KubeletClientConfig:        c.ExtraConfig.KubeletClientConfig,
+		EventTTL:                   c.ExtraConfig.EventTTL,
+		ServiceIPRange:             c.ExtraConfig.ServiceIPRange,
+		ServiceNodePortRange:       c.ExtraConfig.ServiceNodePortRange,
+		LoopbackClientConfig:       c.GenericConfig.LoopbackClientConfig,
+		ServiceAccountIssuer:       c.ExtraConfig.ServiceAccountIssuer,
+		ServiceAccountAPIAudiences: c.ExtraConfig.ServiceAccountAPIAudiences,
+	}
+	m.InstallLegacyAPI(&c, c.GenericConfig.RESTOptionsGetter, legacyRESTStorageProvider)
+}
+```
+
+关于 StorageFactory 请看 [Storage](./storage.md) 章节。
+
 - RESTStorageProvider 概览
 
 ![REST Storage Provider Overview](./images/rest_storage_provider_overview.svg)
