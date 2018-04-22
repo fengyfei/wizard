@@ -122,3 +122,50 @@ m.InstallAPIs(c.ExtraConfig.APIResourceConfigSource, c.GenericConfig.RESTOptions
 实例图如下（完整版请参照代码）：
 
 ![REST Storage Provider Instance](./images/rest_storage_instances.svg)
+
+然后执行：
+
+```go
+func (m *Master) InstallAPIs(apiResourceConfigSource serverstorage.APIResourceConfigSource, restOptionsGetter generic.RESTOptionsGetter, restStorageProviders ...RESTStorageProvider) {
+	apiGroupsInfo := []genericapiserver.APIGroupInfo{}
+
+	// 遍历全部 restStorageProviders
+	for _, restStorageBuilder := range restStorageProviders {
+		groupName := restStorageBuilder.GroupName()
+		// 当前 groupName 不存在任何版本的支持
+		if !apiResourceConfigSource.AnyVersionForGroupEnabled(groupName) {
+			glog.V(1).Infof("Skipping disabled API group %q.", groupName)
+			continue
+		}
+
+		// 创建 apiGroupInfo
+		apiGroupInfo, enabled := restStorageBuilder.NewRESTStorage(apiResourceConfigSource, restOptionsGetter)
+		if !enabled {
+			glog.Warningf("Problem initializing API group %q, skipping.", groupName)
+			continue
+		}
+		glog.V(1).Infof("Enabling API group %q.", groupName)
+
+		if postHookProvider, ok := restStorageBuilder.(genericapiserver.PostStartHookProvider); ok {
+			name, hook, err := postHookProvider.PostStartHook()
+			if err != nil {
+				glog.Fatalf("Error building PostStartHook: %v", err)
+			}
+			m.GenericAPIServer.AddPostStartHookOrDie(name, hook)
+		}
+
+		// 追加至 slice
+		apiGroupsInfo = append(apiGroupsInfo, apiGroupInfo)
+	}
+
+	for i := range apiGroupsInfo {
+		if err := m.GenericAPIServer.InstallAPIGroup(&apiGroupsInfo[i]); err != nil {
+			glog.Fatalf("Error in registering group versions: %v", err)
+		}
+	}
+}
+```
+
+执行过程如下图：
+
+![Install RESTful Handler Overview](./images/install_restful_handler.svg)
