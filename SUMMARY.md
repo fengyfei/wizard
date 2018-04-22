@@ -113,6 +113,7 @@
     * [Configuration](kubernetes/apiserver/configuration.md)
     * [Storage](kubernetes/apiserver/storage.md)
     * [HTTP Server](kubernetes/apiserver/http.md)
+    * [Authentication](kubernetes/apiserver/authentication.md)
     * [Extensions](kubernetes/apiserver/extensions.md)
   * [Kubelet](kubernetes/kubelet/index.md)
 * [Blockchain](blockchain/index.md)
