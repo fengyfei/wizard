@@ -59,6 +59,7 @@
       - [gc](go/runtime/gc.md)
 * [Go Tricks]()
   * [Option Function](tricks/option-func.md)
+  * [Default Interface Implementation](tricks/default-interface-impl.md)
 * [Docker 源码阅读](docker/index.md)
   * [DaemonCli](docker/daemon.md)
   * [Graph Driver](docker/graph-driver.md)
