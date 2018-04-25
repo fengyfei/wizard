@@ -90,6 +90,28 @@ APIGroupVersion 生成后，直接安装路由：
 if err := apiGroupVersion.InstallREST(s.Handler.GoRestfulContainer); err != nil {
 ```
 
+- InstallREST
+
+安装 RESTful 方法，关键结构为 APIInstaller。
+
+```go
+func (g *APIGroupVersion) InstallREST(container *restful.Container) error {
+	prefix := path.Join(g.Root, g.GroupVersion.Group, g.GroupVersion.Version)
+	installer := &APIInstaller{
+		group:                        g,
+		prefix:                       prefix,
+		minRequestTimeout:            g.MinRequestTimeout,
+		enableAPIResponseCompression: g.EnableAPIResponseCompression,
+	}
+
+	apiResources, ws, registrationErrors := installer.Install()
+	versionDiscoveryHandler := discovery.NewAPIVersionHandler(g.Serializer, g.GroupVersion, staticLister{apiResources}, g.Context)
+	versionDiscoveryHandler.AddToWebService(ws)
+	container.Add(ws)
+	return utilerrors.NewAggregate(registrationErrors)
+}
+```
+
 ### 普通路由安装
 
 ```go
