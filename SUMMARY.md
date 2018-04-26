@@ -61,6 +61,8 @@
   * [Option Function](tricks/option-func.md)
   * [Default Interface Implementation](tricks/default-interface-impl.md)
 * [ETCD 3.3 源码阅读](etcd/index.md)
+  * [Gateway](etcd/gateway.md)
+  * [gRPC Proxy](etcd/grpc-proxy.md)
 * [Docker 源码阅读](docker/index.md)
   * [DaemonCli](docker/daemon.md)
   * [Graph Driver](docker/graph-driver.md)
