@@ -2,7 +2,7 @@
 
 ## Overview
 
-![Server Overview](./images/server_overview.svg)
+![Server Overview](../images/server_overview.svg)
 
 ## 启动
 
@@ -43,7 +43,7 @@ if err = inCfg.Validate(); err != nil {
 e = &Etcd{cfg: *inCfg, stopc: make(chan struct{})}
 ```
 
-启动 Raft 处理，详细过程请参照 [Raft](raft.md)：
+启动 Raft 处理，详细过程请参照 [Raft](../raft/raft.md)：
 
 ```go
 if e.Peers, err = startPeerListeners(cfg); err != nil {
