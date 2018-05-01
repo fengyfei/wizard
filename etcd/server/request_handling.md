@@ -33,13 +33,17 @@ func startClientListeners(cfg *Config) (sctxs map[string]*serveCtx, err error) {
 }
 ```
 
-## gRPC Server
+## gRPC Server (V3)
 
 代码位置 etcdserver/api/v3rpc/grpc.go 中，使用 gRPC 不错的范例。
 
 ### QuotaKVServer
 
 ![QuotaKVServer Overview](../images/quota_kv_server_overview.svg)
+
+#### Put 流程
+
+![KV Put Overview](../images/kv_put_process.svg)
 
 ### WatchServer
 
@@ -62,3 +66,8 @@ func startClientListeners(cfg *Config) (sctxs map[string]*serveCtx, err error) {
 ### MaintenanceServer
 
 ![MaintenanceServer Overview](../images/maintenance_server_overview.svg)
+
+## HTTP Server (V3)
+
+通过 [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) 及 [grpc-websocket-proxy](https://github.com/tmc/grpc-websocket-proxy) 转化为 gRPC 调用。
+
