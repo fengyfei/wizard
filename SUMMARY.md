@@ -5,6 +5,8 @@
   * [Golang](titan/go.md)
   * [Kubernetes](titan/kubernetes.md)
   * [IPFS](titan/ipfs.md)
+* [Algorithms](algorithms/index.md)
+  * [Raft](algorithms/raft.md)
 * [Degisn Patterns](design-pattern/index.md)
   * [Creational Patterns](design-pattern/creational-patterns.md)
 * [git 源码阅读](git/index.md)
