@@ -1,5 +1,14 @@
 # Raft
 
+## Replicated State Machine
+
+![Overview](./images/replicated_state_machine.svg)
+
+- [1] Client 发送访问 State Machine 的指令，如查询、新增、修改、删除操作；
+- [2] 一致性模块记录并保证集群内其他 Server 日志内容一致；
+- [3] 每个 Server 采用一致的操作修改 State Machine；
+- [4] 结果返回给 Client。
+
 ## 简介
 
 ### 设计目的
@@ -10,20 +19,19 @@ Paxos 一致性算法不易理解，不易实现。Raft 目的是设计一个容
 - Leader Election: 使用随机时长的定时器选举 Leader
 - 成员变更(Membership changes): 集群成员变更时（新增节点或移除节点）时，采用 new joint consensus 方法，保证原集群正常服务
 
+下图为 Raft 节点状态转换图：
+
+![Raft Server Status](./images/server_status.svg)
+
+Term 示例图：
+
+![Term](./images/term.svg)
+
 ### Raft 基本步骤
 
 - 选择一个 Leader
 - Leader 接收从 Client 发出的 Log Entry，并分发给其他 Server，并通知其他 Server 合适可将 Log Entries 应用的状态
 - 当 Leader 崩溃或不可达时，重新选举
-
-## Replicated State Machine
-
-![Overview](./images/replicated_state_machine.svg)
-
-- [1] Client 发送访问 State Machine 的指令，如查询、新增、修改、删除操作；
-- [2] 一致性模块记录并保证集群内其他 Server 日志内容一致；
-- [3] 每个 Server 采用一致的操作修改 State Machine；
-- [4] 结果返回给 Client。
 
 ## 算法结构
 
