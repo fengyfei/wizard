@@ -143,5 +143,5 @@
   * [The Basic of Ethereum](blockchain/the-basic-of-ethereum.md)
   * [Merkle Patricia Tree](blockchain/merkle-patricia-tree.md)
 * [JavaScript]()
-  * [Scope](JavaScript/scope.md)
-  * [Closure](JavaScript/closure.md)
+  * [Scope](javascript/scope.md)
+  * [Closure](javascript/closure.md)
