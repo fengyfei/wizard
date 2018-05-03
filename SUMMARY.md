@@ -74,6 +74,7 @@
     * [Watch](etcd/server/watch.md)
   * [Raft]()
     * [Raft Overview](etcd/raft/raft.md)
+    * [Inflights](etcd/raft/inflights.md)
   * [Store]()
     * [Storage](etcd/store/storage.md)
     * [Backend](etcd/store/backend.md)
