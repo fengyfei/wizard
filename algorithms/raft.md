@@ -141,6 +141,60 @@ Leader 非持久状态（每次选举后，重新初始化）：
 
 ### Leader Election
 
+Raft 使用心跳机制来触发 Leader Election。
+
+![Overview](./images/leader_election_overview.svg)
+
+当一个 Server 启动时，初始为 Follower。Follower 只要定期收到 Leader 或 Candidates 的心跳，就维持 Follower 状态。
+
+Raft 使用随机的 Election Timeout 来保证尽快选择出 Leader，如下图所示：
+
+![Random Election Timeout](./images/random_election_timeout.svg)
+
 ### Log Replication
 
+Log 结构如下：
+
+![Log Entries Overview](./images/logs_overview.svg)
+
+Leader 接收 Client 请求后，将 Log Entries 记录至本地 Log 中，然后并发的调用 **AppendEntriesRPC** 来复制 Log Entries；如果发生 Follower 崩溃、网络延迟等因素，Leader 会一直调用 **AppendEntriesRPC**（即使在给了 Client 应答后） 来确保全部 Followers 拥有全部记录。
+
+Leader 决定何时应用 Log Entry 至 State Machine，被应用的 Log Entry 称为 Committed Entry。
+
+Raft 确保全部 Committed Entries 是持久化的，且最终会应用到 State Machine。
+
+Leader 持续跟踪 Committed Entries 的最大编号，并会在 **AppendEntriesRPC** 中包含这个值，这样可以确保其他 Servers 最终都会知道该值。
+
+当日志不一致时，如下图所示：
+
+![Inconsistent Log Entries](./images/inconsistent_log_entries.svg)
+
+Raft 强制使用 Leader 的 Log 覆盖其他 Followers 的 Log。Leader 永远不会覆盖或删除自己的日志记录。
+
 ### Safty
+
+#### Election Restriction
+
+在投票阶段，Candidates 调用 **RequestVoteRPC** 时，会附带自己拥有的 **lastLogIndex** 及 **lastLogTerm**，当 Followers 发现自己拥有的日志条目多于 Candidates 时，拒绝投票。
+
+这保证了，新选择的 Leader 拥有全部 Committed Entries。
+
+#### Committing entries from previous terms
+
+![Committing from Previous Terms](./images/committing_from_prev_terms.svg)
+
+为了避免上图的错误情况， Leader 在 Commit 时需要满足：**只允许 Leader 提交包含当前 Term 的日志**
+
+### Cluster Membership Changes
+
+更改配置，可能生成的多 Leader 情况：
+
+![Add Server Problem](./images/add_servers_problem.svg)
+
+可以看出，问题之所以出现，是因为新、旧配置文件有时间段重合的作用时间。
+
+Raft 通过引入 **joint consensus** 配置来解决问题。我们将旧配置文件记录为 C-old，新配置文件记录为 C-new，那么 **joint consensus** 记录为 C-old,new。Leader 接收到配置变更命令后，将 C-old,new 作为一个普通 Log Entry 发布，当 C-old,new 被 Commit 后，系统切换至 C-old,new 配置；然后系统创建 C-new，并在 C-new 被 Commit 后，切换至新配置。如下图：
+
+![Joint Consensus Configuration](./images/joint_consensus_configuration.svg)
+
+当一个 Server 接收到新配置项后（C-old,new C-new），马上使用新配置工作，而不管这个配置项是否已 Committed。
