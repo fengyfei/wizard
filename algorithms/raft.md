@@ -193,8 +193,26 @@ Raft 强制使用 Leader 的 Log 覆盖其他 Followers 的 Log。Leader 永远�
 
 可以看出，问题之所以出现，是因为新、旧配置文件有时间段重合的作用时间。
 
-Raft 通过引入 **joint consensus** 配置来解决问题。我们将旧配置文件记录为 C-old，新配置文件记录为 C-new，那么 **joint consensus** 记录为 C-old,new。Leader 接收到配置变更命令后，将 C-old,new 作为一个普通 Log Entry 发布，当 C-old,new 被 Commit 后，系统切换至 C-old,new 配置；然后系统创建 C-new，并在 C-new 被 Commit 后，切换至新配置。如下图：
+Raft 通过引入 **joint consensus** 配置来解决问题。我们将旧配置文件记录为 C-old，新配置文件记录为 C-new。
+
+当一个 Leader 收到成员变更的请求的时候，他首先会将 C-old 和 C-new 都放在 joint consensus 里面（我们叫做 C-old-new），作为一个 Raft Log 发送给其他的 Followers。
+
+当节点收到 Log，不需要等待 Log 被 committed，就可以使用最新的 C-new 配置了，但这时候，仍然只有 C-old 里面的集群能进行 Vote。
+
+如果这时候 Leader 当掉了，新选出来的节点 要不在 C-old 里面，要不在 C-old-new 里面，因为我们前面没约定 C-old-new 这个 Log 必须 committed。但无论是哪一种 Leader，C-new 这边的集群都不可能单边决策的。
+
+当 C-old-new 被 committed 之后，就进行了 joint consensus 状态，在这个状态里面：
+
+- Log 会被复制到所有在两个 configurations 里面的节点上面；
+- 在两个 configuration 里面的节点都可能被选为 Leader；
+- 但只有 C-old 里面 majority 和 C-new 里面 majority 都同意，才能选出 Leader 和进行 Log 提交。
+
+当进入 joint consensus 之后，Leader 就可以再次提交一个新的 C-new Raft Log，仍然是只要其他节点收到了这个 Log，就可以使用新的 Configuration 了，当 C-new 这个 Log 被 committed 了，那么 C-old 就没用了，不在 C-new 的节点就可以直接关闭。这套流程就能保证在任意时候，C-old 和 C-new 不会出现单边投票的情况。
 
 ![Joint Consensus Configuration](./images/joint_consensus_configuration.svg)
 
-当一个 Server 接收到新配置项后（C-old,new C-new），马上使用新配置工作，而不管这个配置项是否已 Committed。
+### Log Compaction
+
+Snapshot 示意图：
+
+![Snapshot Overview](./images/snapshot_overview.svg)
