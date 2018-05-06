@@ -6,7 +6,7 @@
 M - S 通信时使用的是服务器提供的公钥，加密从客户端得到的消息给服务器完成双方通信
 - 信息抵赖: 发送消息者可以否认之前发过的消息，因为接收端使用公钥不能确定之前接收的消息来源身份
 
-![image](https://github.com/fengyfei/wizard/raw/master/http/images/MITM.png)
+![image](images/MITM.png)
 
 此时需要一种认证体系以确保通信者是安全可靠的。
 
@@ -15,7 +15,7 @@ M - S 通信时使用的是服务器提供的公钥，加密从客户端得到�
 **PKI** 的目标就是实现不同成员在不见面的情况下进行安全通信，当前采用的模型是基于可信的第三方机构，也就是**证书颁发机构（certification authority，CA）**签发的证书。
 PKI 通过数字证书认证机构(CA)将用户的个人身份跟公开密钥链接在一起。对每个证书中心用户的身份必须是唯一的。链接关系由注册和发布过程确定，取决于担保级别，链接关系可能由 CA 的各种软件或在人为监督下完成。
 
-![image](https://github.com/fengyfei/wizard/raw/master/http/images/PKI.png)
+![image](images/PKI.png)
 
 - 订阅人: 或者叫最终实体，是指那些需要证书来提供安全服务的团体，维护服务端的人
 - 登记机构(registration authority - RA): 主要是完成一些证书签发的相关管理工作。例如， RA会首先对用户进行必要的身份验证，然后才会去找 CA 签发证书。在某些情况下，
@@ -29,7 +29,7 @@ PKI 通过数字证书认证机构(CA)将用户的个人身份跟公开密钥链
 这些证书库包含某些 CA 的最终可信证书（信任密钥，trust anchor）。更广泛地说，信赖方是指那些需要通过证书在互联网上进行安全通信的最终用户。用户接收到证书后，读取证书中的相关的明文信息，采用相同的散列函数计算得到信息摘要，
 然后利用对应 CA 的公钥解密签名数据，对比证书的信息摘要，如果一致，则可以确认证书的合法性；然后去查询证书的吊销情况
 
-![image](https://github.com/fengyfei/wizard/raw/master/http/images/certificate-status.png)
+![image](images/certificate-status.png)
 
 - 证书吊销列表(Certificate Revocation List - CRL): 一个单独的文件。该文件包含了 CA 已经吊销的证书序列号(唯一)与吊销日期，同时该文件包含生效日期并通知下次更新该文件的时间，当然该文件必然包含 CA 私钥的签名以验证文件的合法性。
 证书中一般会包含一个 URL 地址 CRL Distribution Point，通知使用者去哪里下载对应的 CRL 以校验证书是否吊销。该吊销方式的优点是不需要频繁更新，但是不能及时吊销证书，因为 CRL 更新时间一般是几天，这期间可能已经造成了极大损失。
@@ -56,7 +56,7 @@ PKI 通过数字证书认证机构(CA)将用户的个人身份跟公开密钥链
 
 #### 证书结构:
 
-![image](https://github.com/fengyfei/wizard/raw/master/http/images/certificate-struct.png)
+![image](images/certificate-struct.png)
 
 - 版本号(version): 证书一共有 3 个版本号，分别用 0、1、2 编码表示版本 1、版本 2 和版本 3。版本 1 只支持简单的字段，版本 2 增加了两个标识符，而版本 3 则增加了扩展功能。现在大部分的证书都采用版本 3 的格式。
 - 序列号(serialNumber): 在一开始，序列号只要是正整数即可，是每个 CA 用来唯一标识其所签发的证书。但是在出现了针对证书签名的预选[前缀攻击](http://www.freebuf.com/articles/database/133391.html)之后，序列号增加了更多的要求来防止此类攻击；现在序列号需要是无序的（无法被预测）而且至少包括20位的熵
@@ -67,7 +67,7 @@ PKI 通过数字证书认证机构(CA)将用户的个人身份跟公开密钥链
 - 公钥(subject public-key info): 这个字段包含了公钥、算法ID、可选参数
 - 扩展(extensions): 比如密钥用法、证书策略、CRL分发点、使用者密钥标识符等等
 
-![image](https://github.com/fengyfei/wizard/raw/master/http/images/github-certificate.png)
+![image](images/github-certificate.png)
 
 #### 证书链
 
@@ -77,7 +77,7 @@ CA 根证书和服务器实体证书中间增加一层证书机构，即中介�
 2. 中间证书 inter.pem 的签发 CA 为 root，root 根据证书 root.pem 验证 inter.pem 为自己签发的合法证书;
 3. 客户端内置信任 CA 的 root.pem 证书，因此服务器证书 server.pem 被信任。
 
-![image](https://github.com/fengyfei/wizard/raw/master/http/images/certificate-chain.png)
+![image](images/certificate-chain.png)
 
 具体例子可以看维基百科的例子: https://zh.wikipedia.org/wiki/%E4%BF%A1%E4%BB%BB%E9%8F%88#%E8%88%89%E4%BE%8B
 
@@ -95,7 +95,7 @@ CA 有时候会为同样的密钥签发多张证书，例如现在最常使用�
 
 再回过头来看中间人攻击，需要身份验证后中间人与 Server 通信时接收服务器的证书实现身份验证，但与客户端通信时无法向用户提供可信任的证书。
 
-![image](https://github.com/fengyfei/wizard/raw/master/http/images/MITM-Cert.png)
+![image](images/MITM-Cert.png)
 
 除非伪造一份证书(很困难)，或者骗取客户端信任，比如在客户机操作系统上添加中间人证书的完全信任，以此实现用户的信任和身份验证。
 
@@ -103,15 +103,15 @@ CA 有时候会为同样的密钥签发多张证书，例如现在最常使用�
 
 使用抓包工具 Charles 时，如果想抓取 HTTPS 的内容，就需要安装其提供的证书并添加信任
 
-![image](https://github.com/fengyfei/wizard/raw/master/http/images/Charles.png)
+![image](images/Charles.png)
 
 没有信任时，抓取的 HTTPS 内容无法解析
 
-![image](https://github.com/fengyfei/wizard/raw/master/http/images/nossl.png)
+![image](images/nossl.png)
 
 取得信任后，抓取的 HTTPS 请求可以和 HTTP 请求一样直接读取
 
-![image](https://github.com/fengyfei/wizard/raw/master/http/images/withssl.png)
+![image](images/withssl.png)
 
 在这个过程中 Charles 就是一个中间人，而且可以完全获取 HTTPS 信息，因为用户安装并信任它的证书，也就可以做到身份验证。
 
@@ -148,13 +148,13 @@ Proxy-Authorization: basic aGVsbG86d29ybGQ=
 ## 题外话
 
 讲到 Charles，不得不提另一个抓包工具 Wireshark。这两个工具的抓包原理不同，Charles 是通过代理过滤抓取本机的网络请求，主要抓 HTTP、HTTPS 的请求；
-Wireshark 则是使用了[网卡混杂模式 - promiscuous mode](https://zh.wikipedia.org/wiki/%E6%B7%B7%E6%9D%82%E6%A8%A1%E5%BC%8F)，可以抓取指定网卡上所有流过的包，可以抓取应用层、传输层、网络层的各种封包，但是不能解析 HTTPS 的内容。
+Wireshark 则是使用了[网卡混杂模式 - promiscuous mode](https://zh.wikipedia.org/wiki/%E6%B7%B7%E6%9D%82%E6%A8%A1%E5%BC%8F)，可以抓取指定网卡上所有流过的包，可以抓取应用层、传输层、网络层的各种封包，但是正常情况下不能解析 HTTPS 的内容(可以通过配置浏览器提供的对称协商密钥或者服务器的私钥来解密 TLS 内容)。
 
 开启混杂模式时除了可以看到自己电脑上的网络封包，还可以看到目标地址不是本机的网络包(如果路由器没有做网络分发的工作的话，完全有可能接收到其他电脑的网络包)，还可以看到局域网内的广播等等。我看了一篇于此相关的网络攻击手段 - [ARP 攻击](https://zhuanlan.zhihu.com/p/28818627)。
 
 ARP（Address Resolution Protocol）即地址解析协议， 用于实现从 IP 地址到 MAC 地址的映射，即询问目标IP 对应的 MAC 地址，如图
 
-![image](https://github.com/fengyfei/wizard/raw/master/http/images/ARP.png)
+![image](images/ARP.png)
 
 而 ARP 攻击者可以通过两种方式实现抓取监听局域网内全部或者想要的目标的网络数据:
 

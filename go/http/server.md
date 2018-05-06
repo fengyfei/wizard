@@ -1,6 +1,6 @@
 ### server
 
-![image](https://github.com/fengyfei/wizard/raw/master/go/http/images/server.png)
+![image](images/server.png)
 
 server 与 conn 等接口
 ```go

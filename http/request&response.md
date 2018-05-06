@@ -10,7 +10,7 @@ Request = Request-Line             // 请求行
           [ message-body ]
 ```
 
-![image](https://github.com/fengyfei/wizard/raw/master/http/images/request.png)
+![image](images/request.png)
 
 一个 HTTP 的 request 消息以一个请求行开始，从第二行开始是 headers (**️每个键值对都以 CRLF 结尾**)，接下来是一个 CRLF 开头的空行，表示 header 结束，最后是消息主体。
 
@@ -75,11 +75,13 @@ urn:oasis:names:specification:docbook:dtd:xml:4.1.2
 ```
 绝对 URI 的格式应该是这样的:
 
-```
+---
+
 <u>http</u>://<u>user:pass</u>@<u>www.example.com</u>:<u>80</u>/<u>dir/index.html</u>?<u>uid=1</u>#<u>ch1</u>
 
 协议://登录信息@服务器地址:端口号/文件路径?查询字符串#片段标识符
-```
+
+---
 
 > 与 URL(统一资源定位符，Universal Resource Locator) 和 URN(统一资源名，Uniform Resource Name)的关系：
 
@@ -96,7 +98,7 @@ Response = Status-Line             // 状态行
            [ message-body ]
 ```
 
-![image](https://github.com/fengyfei/wizard/raw/master/http/images/response.png)
+![image](images/response.png)
 
 response 第一行是状态行，包含状态码 Status-Code，Reason-Phrase 是状态码的简单文本描述(比如 200 - OK、404 - Not Found)
 
@@ -121,6 +123,8 @@ message-body = entity-body | <entity-body encoded as per Transfer-Encoding>
 ```
 
 ## headers
+
+这里只列举了 2616 中提到的头部域，还有很多新添加的头部域，可以自行查找
 
 ```
 general-header = Cache-Control      // 控制缓存的行为，比如 `private, max-age=0, no-cache`
@@ -159,7 +163,7 @@ request-header = Accept               // 通知服务器，用户代理能够处
 ```
 response-header = Accept-Ranges      // 告知客户端服务器是否能处理范围请求，以指定获取服务器端某个部分的资源。可处理范围请求时指定其为 bytes，反之则指定其为 none。
                 | Age                // 告知客户端，源服务器在多久前创建了响应。字段值的单位为秒。若创建该响应的服务器是缓存服务器，Age 值是指缓存后的响应再次发起认证到认证完成的时间值。代理创建响应时必须加上首部字段 Age。
-                | ETag               // 告知客户端实体标签(Entity Tag)。它是一种可将资源以字符串形式做唯一性标识的方式。服务器会为每份资源分配对应的 ETag 值。有强弱之分，弱Etag以'w/'开头，强校验的ETag匹配要求两个资源内容逐字节相同，包括所有其他实体字段（如Content-Language）不发生变化；弱校验只需要确认资源内容相同即可，忽略细微差别比如修改时间等
+                | ETag               // 告知客户端实体标签(Entity Tag)。它是一种可将资源以字符串形式做唯一性标识的方式。服务器会为每份资源分配对应的 ETag 值。有强弱之分，弱Etag以'w/'开头。
                 | Location           // 将响应接收方引导至某个与请求 URI 位置不同的资源。该字段会配合 3xx ：Redirection 的响应，提供重定向的 URI。
                 | Proxy-Authenticate // 由代理服务器所要求的认证信息发送给客户端。
                 | Retry-After        // 告知客户端应该在多久之后再次发送请求。主要配合状态码 503 Service Unavailable 响应，或 3xx Redirect 响应一起使用。字段值可以指定为具体的日期时间（Wed, 04 Jul 2012 06：34：24 GMT 等格式），也可以是创建响应后的秒数
@@ -177,10 +181,172 @@ entity-header = Allow              // 服务端通知客户端能够支持 Reque
                 | Content-MD5      // 客户端会对接收的报文主体执行相同的 MD5 算法，然后与首部字段 Content-MD5 的字段值比较，其目的在于检查报文主体在传输过程中是否保持完整，以及确认传输到达。无法检测出恶意篡改
                 | Content-Range    // 能告知客户端作为响应返回的实体的哪个部分符合范围请求。字段值以字节为单位，表示当前发送部分及整个实体大小。例如: `bytes 5001-10000/10000`
                 | Content-Type     // 说明了实体主体内对象的媒体类型。和首部字段 Accept 一样，字段值用 type/subtype 形式赋值。例如: `text/html; charset=UTF-8`
-                | Expires          // 将资源失效的日期告知客户端。当首部字段 Cache-Control 有指定 max-age 指令时，比起首部字段 Expires，会优先处理 max-age 指令
+                | Expires          // 将资源失效的日期告知客户端。当首部字段 Cache-Control 有指定 max-age 指令时，Cache-Control 优先级大于 Expires
                 | Last-Modified    // 指明资源最终修改的时间
                 | extension-header // 允许定义额外的 entity-header 域而不改变协议，但不能假设接收方认识这些域。接收方应该忽略未识别的头域，但透明代理必须转发它
 ```
+
+### 强缓存和协商缓存
+
+#### 浏览器在加载资源的时，先根据 http header 判断它是否命中强缓存.
+
+- 命中强缓存：浏览器直接从自己缓存中读取资源，不发送请求到服务器
+- 不命中强缓存：浏览器发送一个请求到服务器，服务器根据资源携带的 http header 验证该资源是否命中协商缓存
+    * 命中协商缓存：将请求返回，但不是返回该资源的数据，而是告诉浏览器可以直接从缓存中加载这个资源。
+    * 不命中协商缓存：服务器返回该资源数据
+
+![image](images/Intermediaries.png)
+
+#### 强缓存
+
+-【Cache-Control、Expires】: Expires 指定一个过期的时间戳(绝对时间)，Cache-Control 指定缓存行为(比如 max-age=604800 代表有效期为七天，是相对时间)。一般用其中一个，如果两个同时出现，Cache-Control 优先级大于 Expires。
+
+> Cache-Control 是 http/1.1 弥补 Expires 缺陷新加入的，增加了很多行为
+
+Cache-Control | description
+---|---
+public | 资源将被客户端和代理服务器缓存
+private | 资源仅被客户端缓存, 代理服务器不缓存
+no-store | 请求和响应都不缓存(真正地不缓存)
+no-cache | do-not-serve-from-cache-without-revalidation，响应实际上可以缓存在本地缓存区，只是在与原服务器进行新鲜度验证之前不能返回给客户端
+max-age | 缓存资源, 但是在指定时间(单位为秒)后缓存过期
+s-maxage | 同上, 依赖public设置, 覆盖max-age, 且只在代理服务器上有效
+max-stale | 指定时间内, 即使缓存过时, 资源依然有效
+min-fresh | 缓存的资源至少要保持指定时间的新鲜期
+must-revalidation / proxy-revalidation | 如果缓存失效, 强制重新向服务器(或代理)发起验证(使用 must-revalidate 指令会忽略请求的 max-stale 指令)
+only-if-cached | 仅仅返回已经缓存的资源, 不访问源服务器, 若无缓存则返回 504 Gateway Timeout
+no-transform | 强制要求代理服务器不要对资源进行转换, 禁止代理服务器对 Content-Encoding, Content-Range, Content-Type字段的修改(因此代理的gzip压缩将不被允许)
+cache-extension token | 通过 cache-extension 标记（token），可以扩展 Cache-Control 首部字段内的指令，如果缓存服务器不能理解这个新指令，就会直接忽略
+
+![image](images/强缓存.png)
+
+在控制台中可以查看读取的是本地缓存还是向服务器拉取的资源:
+
+![image](images/hit%20cache.png)
+
+![image](images/no%20cache.png)
+
+#### 协商缓存
+
+-【Last-Modified、If-Modified-Since】: If-Modified-Since 就是上次请求返回的 Last-Modified，服务器再次收到资源请求时，根据浏览器传过来 If-Modified-Since 和资源在服务器上的最后修改时间判断资源是否有变化，如果有变化就正常返回资源内容。如果没有变化，就返回 304 Not Modified，不返回资源内容，不更新 Last-Modified。
+
+-【ETag、If-None-Match】: 浏览器第一次跟服务器请求一个资源，服务器在返回这个资源的同时，在 respone 的 header 加上 ETag（服务器根据当前请求的资源生成的一个唯一标识），这个唯一标识是一个字符串，只要资源有变化这个串就不同，服务器再次收到资源请求时，根据资源生成一个新的 ETag 和浏览器传过来 If-None-Match 比较，如果这两个值相同就说明资源没有变化，否则就是有变化；如果没有变化，返回 304 和 ETag 不返回资源；如果有变化，返回资源。ETag 优先级比 Last-Modified 高
+
+> ⚠️
+> - 在分布式部署的时候，多台机器的 Last-Modified 必须保持一致，否则协商缓存会出问题。
+> - 分布式部署，不同的机器生成的 ETag 都会不一样， 然后协商缓存就会出问题。【如果没有搞定 ETag 一致，就先关闭掉】
+> - 协商缓存需要配合强缓存使用 【不启动强缓存，协商缓存也就不起作用】
+
+![image](images/协商缓存.png)
+
+#### 强校验和弱校验
+
+https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3.3
+
+https://zh.wikipedia.org/wiki/HTTP_ETag
+
+ETag强校验表明资源的两个版本每个字节都是相同，并且请求头（如Content-Language）也不能有改变。强校验允许缓存，以及字节请求部分响应合并。
+
+ETag弱校验表明资源的两个版本只需要语义上保持一致，忽略细微差别比如修改时间等，这意味着，他们是可以互换的，并且缓存的副本也可以被使用。因为不需要资源版本保持字节程度的相同，所以这种 ETag 不适合字节请求。如果 web 服务器要动态的生成响应，这时弱校验 ETag 比较合适。
+
+比如使用弱验证类型，一个页面与另外一个页面只是在页脚显示的时间上有所不同，或者是展示的广告不相同，那么就会被认为是相同的。但是在使用强验证的情况下，二者是不同的。
+
+Last-Modified 存在的问题，也是使用 Etag 的原因:
+
+- 一些文件也许会周期性的更改，但是他的内容并不改变(仅仅改变的修改时间)，这个时候我们并不希望客户端认为这个文件被修改了，而重新 GET
+- 有些文档可能被修改了，但所做的修改并不重要，不需要让所有缓存都重装数据(比如对拼写和注释的修改)
+- 某些文件修改非常频繁，比如在秒以下的时间内进行修改(比如实时监控器)，If-Modified-Since 能检查到的粒度是秒级的，对于小于秒级的修改无法判断(或者说UNIX记录MTIME只能精确到秒)
+- 某些服务器不能精确的得到文件的最后修改时间；
+
+例子:
+
+- 强校验
+
+```
+HTTP/1.1 200 OK
+Date: Sat, 05 May 2018 11:28:26 GMT
+ETag: "aaa"
+Server: nginx/1.12.2
+Content-Length: 5
+Content-Type: text/html
+
+Hello
+```
+若添加了内容编码 `Content-Encoding: gzip` 后，ETag 便会改变
+
+```
+HTTP/1.1 200 OK
+Date: Sat, 05 May 2018 11:28:26 GMT
+ETag: "bbb"
+Server: nginx/1.12.2
+Content-Length: 5
+Content-Type: text/html
+Content-Encoding: gzip
+
+Hello
+```
+
+- 弱检验
+
+```
+HTTP/1.1 200 OK
+Date: Sat, 05 May 2018 11:28:26 GMT
+ETag: W/"ccc"
+Server: nginx/1.12.2
+Content-Type: text/css
+
+.absolute-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+```
+若 CSS 样式做了 minify，ETag 并不会改变，因为内容并没有发生实际变化
+
+```
+HTTP/1.1 200 OK
+Date: Sat, 05 May 2018 11:28:26 GMT
+ETag: W/"ccc"
+Server: nginx/1.12.2
+Content-Type: text/css
+
+.absolute-center{position:absolute;left:50%;top:50%;transform:translate(-50%, -50%)}
+```
+此时客户端发起 `If-None-Match` 请求，服务端还是会响应 304 Not Modified，客户端继续读取之前未 minify 的缓存
+
+#### 其他字段
+
+- Age: 告知客户端，源服务器在多久前创建了响应。若创建该响应的服务器是缓存服务器，Age 值是指缓存后的响应已过时间
+```
+Age:2383321
+Date:Wed, 08 Mar 2017 16:12:42 GMT
+```
+代理服务器在2017年3月8日16:12:42时向源服务器发起了对该资源的请求, 目前已缓存了该资源2383321秒
+
+- Vary: 从代理服务器接收到源服务器返回包含 Vary 指定项的响应之后，若再要进行缓存，仅对请求中含有相同 Vary 指定首部字段的请求返回缓存。即使对相同资源发起请求，但由于 Vary 指定的首部字段不相同，必须要从源服务器重新获取资源。
+```
+Vary:Accept-Encoding,User-Agent
+```
+代理服务器将针对是否压缩和浏览器类型去缓存资源. 对于同一个 url, 就能针对 PC 和 Mobile 返回不同的缓存内容
+
+- Pragma: `Pragma: no-cache`是 http/1.1 之前的遗留版本，作用与`Cache-Control: no-cache`一样
+
+### CDN 缓存
+
+CDN 的全称是 Content Delivery Network，即内容分发网络。将网站的内容发布到最接近用户的网络"边缘"的节点，使用户可以就近取得所需的内容，提高用户访问网站的响应速度
+
+CDN 缓存，也叫网关缓存、反向代理缓存。浏览器先向 CDN 网关发起 WEB 请求，网关服务器后面对应着一台或多台负载均衡源服务器，会根据它们的负载请求，动态地请求转发到合适的源服务器上
+当客户端向 CDN 节点请求数据时，CDN 节点会判断缓存数据是否过期，若缓存数据并没有过期，则直接将缓存数据返回给客户端；否则，CDN 节点就会向源站发出回源请求（back to the source request），从源站拉取最新数据，更新本地缓存，并将最新数据返回给客户端。
+
+CDN 服务商一般会提供基于文件后缀、目录多个维度来指定 CDN 缓存时间，为用户提供更精细化的缓存管理。
+
+CDN 缓存时间会对“回源率”产生直接的影响。若 CDN 缓存时间较短，CDN 边缘节点上的数据会经常失效，导致频繁回源，增加了源站的负载，同时也增大的访问延时；若 CDN 缓存时间太长，会带来数据更新时间慢的问题。开发者需要增对特定的业务，来做特定的数据缓存时间管理。
+
+优点:
+
+- CDN 节点解决了跨运营商和跨地域访问的问题，访问延时大大降低；
+- 大部分请求在 CDN 边缘节点完成，CDN 起到了分流作用，减轻了源站的负载。
 
 ## chunked response
 
@@ -272,6 +438,10 @@ and this is the second one
 consequence
 ```
 
+实际抓包数据:
+
+![image](images/chunked.png)
+
 首部字段 `Trailer` 会事先说明在报文主体后记录了哪些首部字段，比如
 
 ```
@@ -299,3 +469,6 @@ Expires: Tue, 28 Sep 2004 23:59:59 GMT
 - 《图解HTTP》
 - [Chunked transfer encoding - 分块传输编码 wiki](https://zh.wikipedia.org/wiki/%E5%88%86%E5%9D%97%E4%BC%A0%E8%BE%93%E7%BC%96%E7%A0%81)
 - [RFC 2616 - Chunked Transfer Coding](https://tools.ietf.org/html/rfc2616#section-3.6.1)
+- [缓存机制](https://github.com/amandakelake/blog/issues/41)
+- [http cache](https://notfalse.net/56/http-stale-response)
+- [缓存策略](http://imweb.io/topic/55c6f9bac222e3af6ce235b9)
