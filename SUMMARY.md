@@ -73,7 +73,7 @@
   * [Gateway](etcd/gateway.md)
   * [Server]()
     * [Etcd](etcd/server/etcd.md)
-    * [Etcd Server](etcd/server/server.md)
+    * [Run](etcd/server/run.md)
     * [Widget](etcd/server/widget.md)
     * [Client Request Handling](etcd/server/request_handling.md)
     * [Client](etcd/server/client.md)

@@ -9,6 +9,28 @@
 
 ![Wait Time](../images/wait_time.svg)
 
+## notifier
+
+记录错误并，发送通知：
+
+```go
+type notifier struct {
+	c   chan struct{}
+	err error
+}
+
+func newNotifier() *notifier {
+	return &notifier{
+		c: make(chan struct{}),
+	}
+}
+
+func (nc *notifier) notify(err error) {
+	nc.err = err
+	close(nc.c)
+}
+```
+
 ## Scheduler
 
 ![Scheduler](../images/scheduler.svg)
