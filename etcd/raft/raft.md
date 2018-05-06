@@ -296,6 +296,8 @@ go n.run(r)
 return &n
 ```
 
+关于 ```go node.run ``` 详细介绍，请看 [Process](process.md)。
+
 ## References
 
 - [The Raft Consensus Algorithm](https://raft.github.io/)
