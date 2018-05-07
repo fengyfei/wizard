@@ -114,6 +114,8 @@ rh := &raftReadyHandler{
 s.r.start(rh)
 ```
 
+关于 start 详细内容，请看 [Process](../raft/process.md)
+
 获取 lessor 信息：
 
 ```go
@@ -123,3 +125,5 @@ if s.lessor != nil {
 ```
 
 进入事件循环
+
+![Main Event Loop](../images/etcdserver_main_event_loop.svg)
