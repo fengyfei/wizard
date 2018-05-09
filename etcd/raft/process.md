@@ -1,5 +1,9 @@
 # Raft Hanling Process
 
+## Overview
+
+![Relations](../images/raft_process_overview.svg)
+
 ## node.run
 
 全景图如下：
