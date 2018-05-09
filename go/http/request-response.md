@@ -275,7 +275,7 @@ type chunkWriter struct {
 	// 正常情况下在 res.WriteHeader 函数中将 res.handlerHeader 克隆给 header，否则 header 为 nil
 	header Header
 
-	// wroteHeader 代表 header 是否已写入管道(w.conn.buf)
+	// wroteHeader 代表 header 是否已写入管道 (w.conn.buf)
 	wroteHeader bool
 
 	// 在 writeHeader 函数中设置，代表是否使用分块传输

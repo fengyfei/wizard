@@ -25,7 +25,7 @@ rpc.Register 调用 DefaultServer.Register，主要实现在内部函数 registe
 ```go
 // Register 在 server 中注册并发布 receiver 的函数集时需满足以下条件:
 //   * 函数和函数的类型名是已导出的
-//   * 两个参数都是导出类型(或內建类型)
+//   * 两个参数都是导出类型 (或內建类型)
 //   * 第二个参数是指针
 //   * 函数只有一个类型为 error 的返回类型
 // 如果 receiver 不是导出的类型或者没有符合条件的函数，将会返回一个错误。Register 将会使用 log 包记录出现的 error
@@ -185,7 +185,7 @@ func (server *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 // HandleHTTP 注册 server 的 RPC 信息到 rpcPath 上，注册 server 的 debug 信息到 debugPath 上
-// HandleHTTP 会注册到 http.DefaultServeMux上
+// HandleHTTP 会注册到 http.DefaultServeMux 上
 // 之后，仍需要调用 http.Serve()，一般会另起线程："go http.Serve(l, nil)"
 func (server *Server) HandleHTTP(rpcPath, debugPath string) {
 	http.Handle(rpcPath, server)
@@ -226,7 +226,7 @@ type Client struct {
 // ReadResponseBody 以读取响应。客户端在结束该连接的事务时调用 Close 方法。
 // ReadResponseBody 可以使用 nil 参数调用，以强制回复的主体被读取然后丢弃。
 type ClientCodec interface {
-	// WriteRequest 必须能安全的被多个go程同时使用
+	// WriteRequest 必须能安全的被多个 go 协程同时使用
 	WriteRequest(*Request, interface{}) error
 	ReadResponseHeader(*Response) error
 	ReadResponseBody(interface{}) error
@@ -364,8 +364,8 @@ Client 使用不同函数去调取 rpc 服务，Go 可以异步执行，Call 是
 ```go
 // Go 异步地执行函数. 本方法 Call 结构体类型指针的返回值代表该次远程调用. 
 // 通道类型的参数 done 会在本次调用完成时发出信号（通过返回本次 Go 方法的返回值）
-// 如果 done 为nil，Go 会申请一个新的通道（写入返回值的 Done 字段）
-// 如果 done 非nil，done 必须有缓冲，否则 Go 方法会崩溃。
+// 如果 done 为 nil，Go 会申请一个新的通道（写入返回值的 Done 字段）
+// 如果 done 非 nil，done 必须有缓冲，否则 Go 方法会崩溃。
 func (client *Client) Go(serviceMethod string, args interface{}, reply interface{}, done chan *Call) *Call {
 	call := new(Call)
 	call.ServiceMethod = serviceMethod

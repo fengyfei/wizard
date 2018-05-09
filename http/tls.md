@@ -2,9 +2,9 @@
 
 ## 1. TLS 定义
 
-**SSL**(Secure Sockets Layer) 安全套接层，是一种安全协议，经历了 SSL 1.0、2.0、3.0 版本后发展成了标准安全协议 - **TLS**(Transport Layer Security) 传输层安全性协议。TLS 有 1.0 (RFC 2246)、1.1(RFC 4346)、1.2( RFC 5246)、1.3(1.3 在 3.26 号正式被批准)版本。
+**SSL**(Secure Sockets Layer) 安全套接层，是一种安全协议，经历了 SSL 1.0、2.0、3.0 版本后发展成了标准安全协议 - **TLS**(Transport Layer Security) 传输层安全性协议。TLS 有 1.0 (RFC 2246)、1.1(RFC 4346)、1.2(RFC 5246)、1.3(1.3 在 3.26 号正式被批准) 版本。
 
-TLS 在实现上分为**记录层**和**握手层**两层，其中握手层又含四个子协议: 握手协议（handshake protoco 协议（change cipher spec protocol）、应用数据协议（application data protocol）和警报协议（alert protocol）
+TLS 在实现上分为 ** 记录层 ** 和 ** 握手层 ** 两层，其中握手层又含四个子协议: 握手协议（handshake protoco 协议（change cipher spec protocol）、应用数据协议（application data protocol）和警报协议（alert protocol）
 
 ![image](images/tls.png)
 
@@ -26,7 +26,7 @@ TLS 的基本工作方式是，客户端使用非对称加密与服务器进行�
 
 ## 4. 记录层
 
-记录协议负责在传输连接上交换的所有底层消息，并且可以配置加密。每一条 TLS 记录以一个短标头开始。标头包含记录内容的类型(或子协议)、协议版本和长度。原始消息经过分段(或者合并)、压缩、添加认证码、加密转为 TLS 记录的数据部分。
+记录协议负责在传输连接上交换的所有底层消息，并且可以配置加密。每一条 TLS 记录以一个短标头开始。标头包含记录内容的类型 (或子协议)、协议版本和长度。原始消息经过分段 (或者合并)、压缩、添加认证码、加密转为 TLS 记录的数据部分。
 
 ![image](images/message.png)
 
@@ -51,14 +51,14 @@ enum {
 struct {
   ContentType type; // 用于处理封闭片段的较高级协议
   ProtocolVersion version; // 使用的安全协议版本
-  uint16 length; // TLSPlaintext.fragment的长度（以字节为单位），不超过 2^14
+  uint16 length; // TLSPlaintext.fragment 的长度（以字节为单位），不超过 2^14
   opaque fragment[TLSPlaintext.length]; // 透明的应用数据，被视为独立的块，由类型字段指定的较高级协议处理
 } TLSPlaintext;
 ```
 
-### 记录压缩和解压缩(Record compression and decompression)
+### 记录压缩和解压缩 (Record compression and decompression)
 
-压缩算法将 TLSPlaintext 结构转换为 TLSCompressed 结构。如果定义CompressionMethod 为 null 表示不压缩
+压缩算法将 TLSPlaintext 结构转换为 TLSCompressed 结构。如果定义 CompressionMethod 为 null 表示不压缩
 
 ```
 struct { 
@@ -69,7 +69,7 @@ struct {
 } TLSCompressed;
 ```
 
-### 空或标准流加密(Null or standard stream cipher)
+### 空或标准流加密 (Null or standard stream cipher)
 
 流加密（BulkCipherAlgorithm）将 TLSCompressed.fragment 结构转换为流 TLSCiphertext.fragment 结构
 
@@ -88,11 +88,11 @@ TLSCompressed.fragment));
 ```
 seq_num（记录的序列号）、hash（SecurityParameters.mac_algorithm 指定的哈希算法）
 
-> 注意，MAC 是在加密之前计算的。流加密加密整个块，包括 MAC。对于不使用同步向量(例如RC4)的流加密，从一个记录结尾处的流加密状态仅用于后续数据包。如果 CipherSuite 是TLS_NULL_WITH_NULL_NULL，则加密由身份操作(数据未加密，MAC大小为零，暗示不使用MAC)组成。TLSCiphertext.length 是 TLSCompressed.length 加上 CipherSpec.hash_size。
+> 注意，MAC 是在加密之前计算的。流加密加密整个块，包括 MAC。对于不使用同步向量 (例如 RC4) 的流加密，从一个记录结尾处的流加密状态仅用于后续数据包。如果 CipherSuite 是 TLS_NULL_WITH_NULL_NULL，则加密由身份操作 (数据未加密，MAC 大小为零，暗示不使用 MAC) 组成。TLSCiphertext.length 是 TLSCompressed.length 加上 CipherSpec.hash_size。
 
-### CBC 块加密(分组加密)
+### CBC 块加密 (分组加密)
 
-块加密（如RC2或DES），将 TLSCompressed.fragment 结构转换为块 TLSCiphertext.fragment 结构
+块加密（如 RC2 或 DES），将 TLSCompressed.fragment 结构转换为块 TLSCiphertext.fragment 结构
 
 ```
 block-ciphered struct { 
@@ -102,22 +102,22 @@ block-ciphered struct {
   uint8 padding_length;
 } GenericBlockCipher;
 ```
-padding: 添加的填充将明文长度强制为块密码块长度的整数倍。填充可以是长达 255 字节的任何长度，只要满足 TLSCiphertext.length 是块长度的整数倍。长度大于需要的值可以阻止基于分析交换信息长度的协议攻击。填充数据向量中的每个 uint8 必须填入填充长度值(即 padding_length)。
+padding: 添加的填充将明文长度强制为块密码块长度的整数倍。填充可以是长达 255 字节的任何长度，只要满足 TLSCiphertext.length 是块长度的整数倍。长度大于需要的值可以阻止基于分析交换信息长度的协议攻击。填充数据向量中的每个 uint8 必须填入填充长度值 (即 padding_length)。
 
-padding_length: 填充长度应该使得 GenericBlockCipher 结构的总大小是加密块长度的倍数。 合法值范围从零到255（含）。**该长度指定 padding_length 字段本身除外的填充字段的长度。**
+padding_length: 填充长度应该使得 GenericBlockCipher 结构的总大小是加密块长度的倍数。 合法值范围从零到 255（含）。** 该长度指定 padding_length 字段本身除外的填充字段的长度。**
 
 加密块的数据长度（TLSCiphertext.length）是 TLSCompressed.length，CipherSpec.hash_size 和 padding_length 的总和加一
 
 > 示例: 如果块长度为 8 字节，压缩内容长度（TLSCompressed.length）为 61 字节，MAC 长度为 20 字节，则填充前的长度为 82 字节（padding_length 占 1 字节）。
-因此，为了使总长度为块长度(8 字节)的偶数倍，模 8 的填充长度必须等于6，所以填充长度可以为 6，14，22 等。如果填充长度是需要的最小值，比如6，填充将为 6 字节，每个块都包含值 6。因此，块加密之前的 GenericBlockCipher 的最后 8 个八位字节将为xx 06 06 06 06 06 06 06，其中 xx 是 MAC 的最后一个八位字节。
+因此，为了使总长度为块长度 (8 字节) 的偶数倍，模 8 的填充长度必须等于 6，所以填充长度可以为 6，14，22 等。如果填充长度是需要的最小值，比如 6，填充将为 6 字节，每个块都包含值 6。因此，块加密之前的 GenericBlockCipher 的最后 8 个八位字节将为 xx 06 06 06 06 06 06 06，其中 xx 是 MAC 的最后一个八位字节。
 > ```
 > XX  - 06 06 06 06 06 06 - 06
 > MAC -     padding[6]    - padding_length
 > ```
 
-### 记录有效载荷保护(Record payload protection)
+### 记录有效载荷保护 (Record payload protection)
 
-加密和 MAC 功能将 TLSCompressed 结构转换为 TLSCiphertext。记录的MAC还包括序列号，以便可以检测到丢失，额外或重复的消息。
+加密和 MAC 功能将 TLSCompressed 结构转换为 TLSCiphertext。记录的 MAC 还包括序列号，以便可以检测到丢失，额外或重复的消息。
   
 ```
 struct { 
@@ -127,19 +127,19 @@ struct {
   select (CipherSpec.cipher_type) { 
     case stream: GenericStreamCipher; 
     case block: GenericBlockCipher; 
-  } fragment; // TLSCompressed.fragment 的加密形式，带有MAC
+  } fragment; // TLSCompressed.fragment 的加密形式，带有 MAC
 } TLSCiphertext;
 ```
 
 > 注意
 这里提到的都是先 MAC 再加密，是基于 RFC 2246 的方案 (TLS 1.0) 写的。但新的方案选择先加密再 MAC，这种替代方案中，首先对明文和填充进行加密，再将结果交给 MAC 算法。这可以保证主动网络攻击者不能操纵任何加密数据。
 
-### 密钥计算(Key calculation)
+### 密钥计算 (Key calculation)
 
 记录协议需要一种算法，从握手协议提供的安全性参数生成密钥、[IV](https://zh.wikipedia.org/wiki/%E5%88%9D%E5%A7%8B%E5%90%91%E9%87%8F) 和 MAC secret.
-主机密信息(Master secret): 在连接中的两个对等体之间共享一个48字节的密钥
-客户随机数(client random): 由客户端提供的32字节值
-服务器随机数(server random): 由服务器提供的32字节值
+主机密信息 (Master secret): 在连接中的两个对等体之间共享一个 48 字节的密钥
+客户随机数 (client random): 由客户端提供的 32 字节值
+服务器随机数 (server random): 由服务器提供的 32 字节值
 
 ## 5. 握手层
 
@@ -150,7 +150,7 @@ struct {
 
 握手是 TLS 协议中最精密复杂的部分。在这个过程中，通信双方协商连接参数，并且完成身 份验证。根据使用的功能的不同，整个过程通常需要交换 6~10 条消息。根据配置和支持的协议扩展的不同，交换过程可能有许多变种。在使用中经常可以观察到以下三种流程：(1) 完整的握手， 对服务器进行身份验证；(2) 恢复之前的会话采用的简短握手；(3) 对客户端和服务器都进行身份验证的握手。
 
-握手协议消息的标头信息包含消息类型（1字节）和长度（3字节），余下的信息则取决于消息类型：
+握手协议消息的标头信息包含消息类型（1 字节）和长度（3 字节），余下的信息则取决于消息类型：
 
 ```
 struct {
@@ -180,10 +180,10 @@ struct {
 ![image](images/wireshark-clienthello.png)
 
 - Version: 协议版本（protocol version）指示客户端支持的最佳协议版本
-- Random: 一个 32 字节数据，28字节是随机生成的(图中的 Random Bytes)；剩余的4字节包含额外的信息，与客户端时钟有关(图中使用的是 GMT Unix Time)。在握手时，客户端和服务器都会提供随机数，客户端的暂记作 random_C (用于后续的密钥的生成)。这种随机性对每次握手都是独一无二的，在身份验证中起着举足轻重的作用。它可以防止[重放攻击](https://zh.wikipedia.org/wiki/%E9%87%8D%E6%94%BE%E6%94%BB%E5%87%BB)，并确认初始数据交换的完整性。
-- Session ID: 在第一次连接时，会话ID（session ID）字段是空的，这表示客户端并不希望恢复某个已存在的会话。典型的会话 ID 包含 32 字节随机生成的数据，一般由服务端生成通过 ServerHello 返回给客户端。
+- Random: 一个 32 字节数据，28 字节是随机生成的 (图中的 Random Bytes)；剩余的 4 字节包含额外的信息，与客户端时钟有关 (图中使用的是 GMT Unix Time)。在握手时，客户端和服务器都会提供随机数，客户端的暂记作 random_C (用于后续的密钥的生成)。这种随机性对每次握手都是独一无二的，在身份验证中起着举足轻重的作用。它可以防止 [重放攻击](https://zh.wikipedia.org/wiki/%E9%87%8D%E6%94%BE%E6%94%BB%E5%87%BB)，并确认初始数据交换的完整性。
+- Session ID: 在第一次连接时，会话 ID（session ID）字段是空的，这表示客户端并不希望恢复某个已存在的会话。典型的会话 ID 包含 32 字节随机生成的数据，一般由服务端生成通过 ServerHello 返回给客户端。
 - Cipher Suites: 密码套件（cipher suite）块是由客户端支持的所有密码套件组成的列表，该列表是按优先级顺序排列的
-- Compression: 客户端可以提交一个或多个支持压缩的方法。默认的压缩方法是null，代表没有压缩
+- Compression: 客户端可以提交一个或多个支持压缩的方法。默认的压缩方法是 null，代表没有压缩
 - Extensions: 扩展（extension）块由任意数量的扩展组成。这些扩展会携带额外数据
 
 #### 5.1.2 ServerHello
@@ -192,7 +192,7 @@ struct {
 
 ![image](images/wireshark-serverhello.png)
 
-这个消息的结构与 ClientHello 类似，只是每个字段只包含一个选项，其中包含服务端的 random_S 参数(用于后续的密钥协商)。服务器无需支持客户端支持的最佳版本。如果服务器不支持与客户端相同的版本，可以提供某个其他版本以期待客户端能够接受
+这个消息的结构与 ClientHello 类似，只是每个字段只包含一个选项，其中包含服务端的 random_S 参数 (用于后续的密钥协商)。服务器无需支持客户端支持的最佳版本。如果服务器不支持与客户端相同的版本，可以提供某个其他版本以期待客户端能够接受
 
 #### 5.1.3 Certificate
 
@@ -200,7 +200,7 @@ struct {
 
 ![image](images/wireshark-certificate.png)
 
-Certificate消息是可选的，因为并非所有套件都使用身份验证，也并非所有身份验证方法都需要证书。更进一步说，虽然消息默认使用X.509证书，但是也可以携带其他形式的标志；一些套件就依赖[PGP密钥](https://zh.wikipedia.org/wiki/PGP)
+Certificate 消息是可选的，因为并非所有套件都使用身份验证，也并非所有身份验证方法都需要证书。更进一步说，虽然消息默认使用 X.509 证书，但是也可以携带其他形式的标志；一些套件就依赖 [PGP 密钥](https://zh.wikipedia.org/wiki/PGP)
 
 #### 5.1.4 ServerKeyExchange
 
@@ -245,7 +245,7 @@ ChangeCipherSpec 不属于握手消息，它是另一种协议，只有一条消
 
 #### 5.1.9 Finished (Encrypted Handshake Message)
 
-Finished消息意味着握手已经完成。消息内容将加密，以便双方可以安全地交换验证整个握手完整性所需的数据。
+Finished 消息意味着握手已经完成。消息内容将加密，以便双方可以安全地交换验证整个握手完整性所需的数据。
 
 这个消息包含 verify_data 字段，它的值是握手过程中所有消息的散列值。这些消息在连接两端都按照各自所见的顺序排列，并以协商得到的主密钥计算散列。这个过程是通过一个伪随机函数（pseudorandom function，PRF）来完成的，这个函数可以生成任意数量的伪随机数据。
 两端的计算方法一致，但会使用不同的标签（finished_label）：客户端使用 client finished，而服务器则使用 server finished。
@@ -253,7 +253,7 @@ Finished消息意味着握手已经完成。消息内容将加密，以便双方
 ```
 verify_data = PRF(master_secret, finished_label, Hash(handshake_messages))
 ```
-因为 Finished 消息是加密的，并且它们的完整性由协商 MAC 算法保证，所以主动网络攻击者不能改变握手消息并对 vertify_data 的值造假。在 TLS 1.2 版本中，Finished 消息的长度默认是 12 字节（96位），并且允许密码套件使用更长的长度。在此之前的版本，除了 SSL 3 使用 36 字节的定长消息，其他版本都使用 12 字节的定长消息。
+因为 Finished 消息是加密的，并且它们的完整性由协商 MAC 算法保证，所以主动网络攻击者不能改变握手消息并对 vertify_data 的值造假。在 TLS 1.2 版本中，Finished 消息的长度默认是 12 字节（96 位），并且允许密码套件使用更长的长度。在此之前的版本，除了 SSL 3 使用 36 字节的定长消息，其他版本都使用 12 字节的定长消息。
 
 #### 5.1.10 Server
 
@@ -282,12 +282,12 @@ verify_data = PRF(master_secret, finished_label, Hash(handshake_messages))
 
 ### 5.2 RSA 算法和 DH 算法
 
-TLS 握手过程使用的是默认的 RSA 算法，RSA 握手的过程与上述基本一致，只是没有 ServerKeyExchange 消息，其中协商密钥涉及到三个参数(客户端随机数 random_C、服务端随机数 random_S、预主密钥 Premaster secret)，其中前两个随机数和协商使用的算法是明文的很容易获取，
-最后一个 Premaster secret 会用服务器提供的公钥加密后传输给服务器(密钥交换)，如果这个预主密钥被截取并破解则协商密钥也可以被破解。
+TLS 握手过程使用的是默认的 RSA 算法，RSA 握手的过程与上述基本一致，只是没有 ServerKeyExchange 消息，其中协商密钥涉及到三个参数 (客户端随机数 random_C、服务端随机数 random_S、预主密钥 Premaster secret)，其中前两个随机数和协商使用的算法是明文的很容易获取，
+最后一个 Premaster secret 会用服务器提供的公钥加密后传输给服务器 (密钥交换)，如果这个预主密钥被截取并破解则协商密钥也可以被破解。
 
-关于 RSA 算法的细节参见[wiki](https://zh.wikipedia.org/wiki/RSA%E5%8A%A0%E5%AF%86%E6%BC%94%E7%AE%97%E6%B3%95)
+关于 RSA 算法的细节参见 [wiki](https://zh.wikipedia.org/wiki/RSA%E5%8A%A0%E5%AF%86%E6%BC%94%E7%AE%97%E6%B3%95)
 
-其核心思想是利用了极大整数[因数分解](https://zh.wikipedia.org/wiki/%E6%95%B4%E6%95%B0%E5%88%86%E8%A7%A3)的计算复杂性
+其核心思想是利用了极大整数 [因数分解](https://zh.wikipedia.org/wiki/%E6%95%B4%E6%95%B0%E5%88%86%E8%A7%A3) 的计算复杂性
 
 更安全的做法是使用 [DH(Diffie-Hellman) 算法](https://zh.wikipedia.org/wiki/%E8%BF%AA%E8%8F%B2-%E8%B5%AB%E7%88%BE%E6%9B%BC%E5%AF%86%E9%91%B0%E4%BA%A4%E6%8F%9B) 代替默认的 RSA 算法，DH 不需要传递 Premaster secret，双方只要交换各自的 DH 参数，就可以各自算出这个预主密钥
 
@@ -303,9 +303,9 @@ DH 的握手过程如下，大致过程与 RSA 类似，图中只表达如何生
 
 > 基于 RSA 算法与 DH 算法的握手最大的区别就在于密钥交换与身份认证。前者利用客户端使用公钥加密预主密钥发送给服务端完成密钥交换，服务端利用私钥解密完成身份认证。后者利用各自发送的 DH 参数完成密钥交换，服务器私钥签名数据，客户端公钥验签完成身份认证。
 
-关于 DH 算法如何生成预主密钥，推荐看下[Wiki](https://zh.wikipedia.org/wiki/%E8%BF%AA%E8%8F%B2-%E8%B5%AB%E7%88%BE%E6%9B%BC%E5%AF%86%E9%91%B0%E4%BA%A4%E6%8F%9B#%E6%8F%8F%E8%BF%B0)和[Ephemeral Diffie-Hellman handshake](https://blog.cloudflare.com/keyless-ssl-the-nitty-gritty-technical-details/#ephemeraldiffiehellmanhandshake)
+关于 DH 算法如何生成预主密钥，推荐看下 [Wiki](https://zh.wikipedia.org/wiki/%E8%BF%AA%E8%8F%B2-%E8%B5%AB%E7%88%BE%E6%9B%BC%E5%AF%86%E9%91%B0%E4%BA%A4%E6%8F%9B#%E6%8F%8F%E8%BF%B0) 和 [Ephemeral Diffie-Hellman handshake](https://blog.cloudflare.com/keyless-ssl-the-nitty-gritty-technical-details/#ephemeraldiffiehellmanhandshake)
 
-其核心思想是利用了[离散对数问题](https://en.wikipedia.org/wiki/Discrete_logarithm)的计算复杂性
+其核心思想是利用了 [离散对数问题](https://en.wikipedia.org/wiki/Discrete_logarithm) 的计算复杂性
 
 > 原根：假设一个整数 g 对于质数 P 来说是原根，那么 g^i mod P (1 ≦ i < P) 的结果各不相同，且其结果按一定顺序排列后是 1 到 P-1 的所有整数，[例子](https://zh.wikipedia.org/wiki/%E5%8E%9F%E6%A0%B9#%E4%BE%8B%E5%AD%90)
 
@@ -317,7 +317,7 @@ DH 的握手过程如下，大致过程与 RSA 类似，图中只表达如何生
 
 ![image](images/Diffie-Hellman.png)
 
-双方预先商定好了一对 P g 值(公开的)，而 Alice 有一个私密数 a(非公开，对应一个私钥)，Bob 有一个私密数 b(非公开，对应一个私钥)
+双方预先商定好了一对 P g 值 (公开的)，而 Alice 有一个私密数 a(非公开，对应一个私钥)，Bob 有一个私密数 b(非公开，对应一个私钥)
 
 - Alice 计算 A = g^a mod P，并把 A(公开，对应一个公钥) 发给  Bob
 
@@ -327,7 +327,7 @@ DH 的握手过程如下，大致过程与 RSA 类似，图中只表达如何生
 
 对于 Alice 和 Bob 来说通过对方发过来的公钥参数和自己手中的私钥可以得到最终相同的密钥
 
-而第三方最多知道 P g A B，想得到私钥和最后的密钥很困难，当然前提是 a b P 足够大(RFC3526 文档中有几个常用的大素数可供使用)，否则暴力破解也有可能试出答案，至于 g 一般取个较小值就可以
+而第三方最多知道 P g A B，想得到私钥和最后的密钥很困难，当然前提是 a b P 足够大 (RFC3526 文档中有几个常用的大素数可供使用)，否则暴力破解也有可能试出答案，至于 g 一般取个较小值就可以
 
 如下几张图是实际 DH 握手发送的内容:
 
@@ -339,9 +339,9 @@ DH 的握手过程如下，大致过程与 RSA 类似，图中只表达如何生
 
 可以看到双方发给对方的参数中携带了一个公钥值，对应上述的 A 和 B
 
-而且实际用的加密套件是[椭圆曲线 DH 密钥交换(ECDH)](https://zh.wikipedia.org/wiki/%E6%A9%A2%E5%9C%93%E6%9B%B2%E7%B7%9A%E8%BF%AA%E8%8F%B2-%E8%B5%AB%E7%88%BE%E6%9B%BC%E9%87%91%E9%91%B0%E4%BA%A4%E6%8F%9B)，利用由椭圆曲线加密建立公钥与私钥对更进一步加强 DH 的安全性，因为目前解决椭圆曲线离散对数问题要比因式分解困难的多，而且 ECC 使用的密钥长度比 RSA 密钥短得多
+而且实际用的加密套件是 [椭圆曲线 DH 密钥交换 (ECDH)](https://zh.wikipedia.org/wiki/%E6%A9%A2%E5%9C%93%E6%9B%B2%E7%B7%9A%E8%BF%AA%E8%8F%B2-%E8%B5%AB%E7%88%BE%E6%9B%BC%E9%87%91%E9%91%B0%E4%BA%A4%E6%8F%9B)，利用由椭圆曲线加密建立公钥与私钥对更进一步加强 DH 的安全性，因为目前解决椭圆曲线离散对数问题要比因式分解困难的多，而且 ECC 使用的密钥长度比 RSA 密钥短得多
 
-关于[椭圆曲线密码学 - ECC](https://zh.wikipedia.org/wiki/%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81%E5%AD%A6)，推荐看下[A Primer on Elliptic Curve Cryptography - 原文](https://blog.cloudflare.com/a-relatively-easy-to-understand-primer-on-elliptic-curve-cryptography/) - [译文](https://zhuanlan.zhihu.com/p/26029199)
+关于 [椭圆曲线密码学 - ECC](https://zh.wikipedia.org/wiki/%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81%E5%AD%A6)，推荐看下 [A Primer on Elliptic Curve Cryptography - 原文](https://blog.cloudflare.com/a-relatively-easy-to-understand-primer-on-elliptic-curve-cryptography/) - [译文](https://zhuanlan.zhihu.com/p/26029199)
 
 ### 5.3 客户端身份验证
 
@@ -388,7 +388,7 @@ Session ID 由服务器端支持，协议中的标准字段，因此基本所有
 
 用来替代服务器会话缓存和恢复的方案是使用会话票证（Session ticket）。使用这种方式，除了所有的状态都保存在客户端（与 HTTP Cookie 的原理类似）之外，其消息流与服务器会话缓存是一样的。
 
-其思想是服务器取出它的所有会话数据（状态）并进行加密(密钥只有服务器知道)，再以票证的方式发回客户端。在接下来的连接中，客户端恢复会话时在 **ClientHello 的扩展字段** session_ticket 中携带加密信息将票证提交回服务器，由服务器检查票证的完整性，解密其内容，再使用其中的信息恢复会话。
+其思想是服务器取出它的所有会话数据（状态）并进行加密 (密钥只有服务器知道)，再以票证的方式发回客户端。在接下来的连接中，客户端恢复会话时在 **ClientHello 的扩展字段 ** session_ticket 中携带加密信息将票证提交回服务器，由服务器检查票证的完整性，解密其内容，再使用其中的信息恢复会话。
 
 这种方法有可能使扩展服务器集群更为简单，因为如果不使用这种方式，就需要在服务集群的各个节点之间同步会话。
 Session ticket 需要服务器和客户端都支持，属于一个扩展字段，占用服务器资源很少。
@@ -403,6 +403,6 @@ Session ticket 需要服务器和客户端都支持，属于一个扩展字段�
 - [MAC (Message authentication code) - 消息认证码](https://zh.wikipedia.org/wiki/%E8%A8%8A%E6%81%AF%E9%91%91%E5%88%A5%E7%A2%BC)
 - [TLS - wiki](https://zh.wikipedia.org/wiki/%E5%82%B3%E8%BC%B8%E5%B1%A4%E5%AE%89%E5%85%A8%E6%80%A7%E5%8D%94%E5%AE%9A)
 - [SSL/TLS in detail](https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc785811(v=ws.10))
-- [HTTPS加密协议详解](https://www.wosign.com/faq/faq2016-0309-02.htm)
+- [HTTPS 加密协议详解](https://www.wosign.com/faq/faq2016-0309-02.htm)
 - [Keyless SSL: The Nitty Gritty Technical Details](https://blog.cloudflare.com/keyless-ssl-the-nitty-gritty-technical-details/#rsahandshake)
-- 《HTTPS 权威指南-在服务器和 web 应用上部署 SSL/TLS 和 PKI》
+- 《HTTPS 权威指南 - 在服务器和 web 应用上部署 SSL/TLS 和 PKI》

@@ -12,11 +12,11 @@ type Server struct {
     ReadHeaderTimeout time.Duration // 读取 request headers 的最大时长
     WriteTimeout      time.Duration // 写 response 的最大时长
     IdleTimeout       time.Duration // 当 keepalive 开启时等待下个 request 的最大时长，此值为空时使用 ReadTimeout 值代替，ReadTimeout 也为空使用 ReadHeaderTimeout 代替
-    MaxHeaderBytes    int           // 解析 request headers 里键值对的最大字节数(包含请求行)，不限制 body. 如果为 0, 使用 DefaultMaxHeaderBytes 代替
-    TLSNextProto      map[string]func(*Server, *tls.Conn, Handler) // 当'应用层协议协商(NPN/ALPN)'时发生协议升级时，TLSNextProto 需要指定可选的 function 去接管 TLS 连接
+    MaxHeaderBytes    int           // 解析 request headers 里键值对的最大字节数 (包含请求行)，不限制 body. 如果为 0, 使用 DefaultMaxHeaderBytes 代替
+    TLSNextProto      map[string]func(*Server, *tls.Conn, Handler) // 当 '应用层协议协商 (NPN/ALPN)' 时发生协议升级时，TLSNextProto 需要指定可选的 function 去接管 TLS 连接
     ConnState         func(net.Conn, ConnState) // 指定一个可选的钩子函数，由 client 连接状态改变触发
     ErrorLog          *log.Logger   // 指定一个可选的 logger 接收错误日志. 如果为空则由 log 包接管
-    disableKeepAlives int32         // 在 SetKeepAlivesEnabled 中设置，为 1 表示取消长连接，为 0 保持长连接(默认)
+    disableKeepAlives int32         // 在 SetKeepAlivesEnabled 中设置，为 1 表示取消长连接，为 0 保持长连接 (默认)
     inShutdown        int32         // 非零代表 in Shutdown
     nextProtoOnce     sync.Once     // 设置 HTTP/2
     nextProtoErr      error         // http2.ConfigureServer 的结果
@@ -39,7 +39,7 @@ type conn struct {
     rwc        net.Conn             // 
     remoteAddr string               // rwc.RemoteAddr().String()
     tlsState   *tls.ConnectionState // TLS 连接状态，nil 代表非 TSL
-    werr       error                // rwc 写入时的首个错误(bufw 写入时)
+    werr       error                // rwc 写入时的首个错误 (bufw 写入时)
     r          *connReader          // 一个 *conn 使用的 io.reader 封装，存有 bufr 的读取内容
     bufr       *bufio.Reader        // 从 r 读取
     bufw       *bufio.Writer        // 要写入 checkConnErrorWriter{c} 的缓冲
@@ -54,11 +54,11 @@ type conn struct {
 // 其函数可以被多个 goroutines 同时使用
 // 一个请求过来时可能会涉及到多个 goroutines，Ctx 可以控制关闭与之相关联和派生出的子 ctx 相关联的 goroutines
 type Context interface {
-	// Deadline 方法是获取设置的截止时间，第一个返回值是截止时间，到了这个时间点，Context会自动发起取消请求；
+	// Deadline 方法是获取设置的截止时间，第一个返回值是截止时间，到了这个时间点，Context 会自动发起取消请求；
 	// 第二个返回值 ok==false 时表示没有设置截止时间，如果需要取消的话，需要调用 cancel 函数进行取消，取消操作包括派生出去的子 Ctx
 	Deadline() (deadline time.Time, ok bool)
 	// 在 goroutine 中，如果该方法返回的 chan 可以读取，则意味着 parent context 已经发起了取消请求，
-	// 我们通过 Done 方法收到这个信号后，就应该做清理操作，然后退出goroutine，释放资源
+	// 我们通过 Done 方法收到这个信号后，就应该做清理操作，然后退出 goroutine，释放资源
     Done() <-chan struct{}
     // 如果 Done 还没关闭，Err 返回 nil
     // 如果 Done 已经关闭，返回非空 err，告知 Ctx 因何取消
@@ -303,7 +303,7 @@ func (c *conn) serve(ctx context.Context) {
 
 		c.curReq.Store(w)
 
-		if requestBodyRemains(req.Body) { // 之后是否还能从 body 读取到数据，true 表示能继续读(未到 io.EOF)
+		if requestBodyRemains(req.Body) { // 之后是否还能从 body 读取到数据，true 表示能继续读 (未到 io.EOF)
 			registerOnHitEOF(req.Body, w.conn.r.startBackgroundRead) // 当 body 读到 EOF，调用传入的 startBackgroundRead 函数
 		} else { // 长连接下 HTTP 管线化请求时的处理
 			if w.conn.bufr.Buffered() > 0 {
@@ -385,7 +385,7 @@ type Hijacker interface {
 
 // ServeMux 类型是 HTTP 请求的路由规则转换器。它会将每一个接收的请求的 URL 与一个注册路由的列表进行匹配，并调用和 URL 最匹配的 handler.
 // 匹配到多个时较长的模式优先于较短的模式，模式也可以主机名开始，表示只匹配该主机上的路径，指定主机的模式优先于一般的模式，
-// ServeMux 还会规范化请求的 URL 路径，将任何包含"."或".."元素的请求重定向到等价的没有这两种元素的URL
+// ServeMux 还会规范化请求的 URL 路径，将任何包含 "." 或 ".." 元素的请求重定向到等价的没有这两种元素的 URL
 type ServeMux struct {
 	mu    sync.RWMutex // 读写锁
 	m     map[string]muxEntry // 路由规则，一个 string 对应一个 mux 实体，这里的 string 就是注册的路由表达式
@@ -398,7 +398,7 @@ type muxEntry struct {
 }
 
 // 一个 Handler 响应一个 HTTP 请求
-// ServeHTTP 应该将回复的头域和数据写入 ResponseWriter 接口然后返回。返回标志着该请求已经结束，HTTP服务端可以转移向该连接上的下一个请求。
+// ServeHTTP 应该将回复的头域和数据写入 ResponseWriter 接口然后返回。返回标志着该请求已经结束，HTTP 服务端可以转移向该连接上的下一个请求。
 // 在 ServeHTTP 调用结束之后或者并发执行时，使用 ResponseWriter 或者读取请求体是不可取的
 // handler 应该第一时间读取请求体并作出应答，在向 ResponseWriter 写入数据后就不能读取 request body 了. 同时 handler 不应该修改传入的 request
 type Handler interface {
@@ -413,7 +413,7 @@ func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
 	f(w, r)
 }
 ```
-**请求 - 响应实例**
+** 请求 - 响应实例 **
 
 这里实现了一个 `404 not found` 响应
 ```go
@@ -482,7 +482,7 @@ func (mux *ServeMux) ServeHTTP(w ResponseWriter, r *Request) {
 // 如果没有已注册的 handler 与请求匹配, 则返回 ``page not found'' handler 和空的 pattern
 func (mux *ServeMux) Handler(r *Request) (h Handler, pattern string) {
 	if r.Method == "CONNECT" {
-		// redirectToPathSlash 判断 path 是否需要追加 "/"，因为存在 "path + /"已注册但 "path"
+		// redirectToPathSlash 判断 path 是否需要追加 "/"，因为存在 "path + /" 已注册但 "path"
 		// 本身未注册的情况。如果需要追加 "/"，则返回追加的 url 和 true
 		if u, ok := mux.redirectToPathSlash(r.URL.Host, r.URL.Path, r.URL); ok {
 			return RedirectHandler(u.String(), StatusMovedPermanently), u.Path
@@ -492,7 +492,7 @@ func (mux *ServeMux) Handler(r *Request) (h Handler, pattern string) {
 	}
 
 	host := stripHostPort(r.Host) // 去掉 ":<port>"
-	path := cleanPath(r.URL.Path) // 规范 path 格式，比如缺失多余'/'、存在相对路径'.'、'..'等
+	path := cleanPath(r.URL.Path) // 规范 path 格式，比如缺失多余 '/'、存在相对路径'.'、'..' 等
 
 	if u, ok := mux.redirectToPathSlash(host, path, r.URL); ok {
 		return RedirectHandler(u.String(), StatusMovedPermanently), u.Path
