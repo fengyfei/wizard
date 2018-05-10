@@ -413,7 +413,7 @@ func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
 	f(w, r)
 }
 ```
-** 请求 - 响应实例 **
+**请求 - 响应实例**
 
 这里实现了一个 `404 not found` 响应
 ```go
