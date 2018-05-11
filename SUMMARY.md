@@ -64,6 +64,7 @@
   * [runtime](go/runtime/index.md)
       - [alloction](go/runtime/allocation.md)
       - [gc](go/runtime/gc.md)
+      - [mcache.go](go/runtime/mcache.go.md)
 * [Go Tricks]()
   * [Option Function](tricks/option-func.md)
   * [Default Interface Implementation](tricks/default-interface-impl.md)
