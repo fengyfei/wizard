@@ -10,9 +10,9 @@
 
 ![node.run Landscape](../images/node_run_landscape.svg)
 
-### step
+### Raft Handling Procedures
 
-![step Process Overview](../images/node_step_process.svg)
+![Raft Relationship Overview](../images/node_raft_relationship.svg)
 
 #### Step 方法
 
@@ -144,6 +144,10 @@ default:
 	r.step(r, m)
 }
 ```
+
+#### Ready 结构
+
+![Ready Overview](../images/ready_overview.svg)
 
 ## raftNode.start
 
