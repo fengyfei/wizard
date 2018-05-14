@@ -239,6 +239,10 @@ cache-extension token | 通过 cache-extension 标记（token），可以扩展 
 
 ![image](images/NegotiateCache.png)
 
+> 另外浏览器的刷新 (F5 / cmd + r) 和强刷 (Ctrl + F5 / shift + cmd +r / option + cmd + r(safari)):
+普通刷新会使用协商缓存，忽略强缓存；强刷会忽略浏览器所有缓存（并且请求头会携带 Cache-Control:no-cache 和 Pragma:no-cache，用来通知所有中间节点忽略缓存）。
+只有从地址栏或收藏夹输入网址、点击链接等情况下，浏览器才会使用强缓存。
+
 #### 强校验和弱校验
 
 https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3.3

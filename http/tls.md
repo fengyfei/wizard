@@ -30,7 +30,7 @@ TLS 的基本工作方式是，客户端使用非对称加密与服务器进行�
 
 ![image](images/message.png)
 
-### 碎片 (Fragmentation)
+### 分片 (Fragmentation)
 
 记录层将信息块分割成携带 2^14 字节 (16KB) 或更小块的数据的 TLSPlaintext 记录。
 
@@ -199,6 +199,8 @@ struct {
 
 图中的 `Cipher Suite` 是后续密钥协商和身份验证要用的加密套件，此处选择的密钥交换与签名算法是 ECDHE_RSA，对称加密算法是 AES-GCM，后面会讲到这个
 
+还有一点默认情况下 TLS 压缩都是关闭的，因为 [CRIME](https://zh.wikipedia.org/wiki/CRIME) 攻击会利用 TLS 压缩恢复加密认证 cookie，实现会话劫持，而且一般配置 gzip 等内容压缩后再压缩 TLS 分片效益不大又额外占用资源，所以一般都关闭 TLS 压缩
+
 #### 5.1.3 Certificate
 
 典型的 Certificate 消息用于携带服务器 X.509 [证书链](https://zh.wikipedia.org/wiki/%E4%BF%A1%E4%BB%BB%E9%8F%88)。
@@ -309,13 +311,17 @@ RSA 历史悠久，支持度好，但不支持 [完美前向安全 - PFS(Perfect
 
 在 RSA 密钥交换中，浏览器使用证书提供的 RSA 公钥加密相关信息，如果服务端能解密，意味着服务端拥有与公钥对应的私钥，同时也能算出对称加密所需密钥。密钥交换和服务端认证合并在一起。
 
-在 ECDH 密钥交换中，服务端使用私钥对相关信息进行签名，如果浏览器能用证书公钥验证签名，就说明服务端确实拥有对应私钥，从而完成了服务端认证。密钥交换则是各自发送 DH 参数完成的，密钥交换和服务端认证是完全分开的。
+在 ECDH 密钥交换中，服务端使用私钥 (RSA 或 ECDSA) 对相关信息进行签名，如果浏览器能用证书公钥验证签名，就说明服务端确实拥有对应私钥，从而完成了服务端认证。密钥交换则是各自发送 DH 参数完成的，密钥交换和服务端认证是完全分开的。
 
 可用于 ECDHE 数字签名的算法主要有 [RSA](https://zh.wikipedia.org/wiki/RSA%E5%8A%A0%E5%AF%86%E6%BC%94%E7%AE%97%E6%B3%95) 和 [ECDSA - 椭圆曲线数字签名算法](https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm)，也就是目前密钥交换 + 签名有三种主流选择:
 
 - `RSA` - RSA 密钥交换（无需签名）
 - `ECDHE_RSA` - ECDHE 密钥交换、RSA 签名
 - `ECDHE_ECDSA` - ECDHE 密钥交换、ECDSA 签名
+
+![image](images/signatureAlgorithm.png)
+
+比如我的网站使用的加密套件是 ECDHE_RSA，可以看到数字签名算法是 sha256 哈希加 RSA 加密，在 [PKI](pki.md) 一节中讲了签名是服务器信息摘要的哈希值加密生成的
 
 内置 ECDSA 公钥的证书一般被称之为 ECC 证书，内置 RSA 公钥的证书就是 RSA 证书。因为 256 位 ECC Key 在安全性上等同于 3072 位 RSA Key，所以 ECC 证书体积比 RSA 证书小，而且 ECC 运算速度更快，ECDHE 密钥交换 + ECDSA 数字签名是目前最好的加密套件
 
@@ -332,7 +338,7 @@ RSA 算法的细节见: [wiki](https://zh.wikipedia.org/wiki/RSA%E5%8A%A0%E5%AF%
 
 RSA 的算法核心思想是利用了极大整数 [因数分解](https://zh.wikipedia.org/wiki/%E6%95%B4%E6%95%B0%E5%88%86%E8%A7%A3) 的计算复杂性
 
-使用 [DH(Diffie-Hellman) 算法](https://zh.wikipedia.org/wiki/%E8%BF%AA%E8%8F%B2-%E8%B5%AB%E7%88%BE%E6%9B%BC%E5%AF%86%E9%91%B0%E4%BA%A4%E6%8F%9B) 进行密钥交换，双方只要交换各自的 DH 参数(在 ServerKeyExchange 发送 Server params，在 ClientKeyExchange 发送 Client params)，不需要传递 Premaster secret，就可以各自算出这个预主密钥
+而使用 [DH(Diffie-Hellman) 算法](https://zh.wikipedia.org/wiki/%E8%BF%AA%E8%8F%B2-%E8%B5%AB%E7%88%BE%E6%9B%BC%E5%AF%86%E9%91%B0%E4%BA%A4%E6%8F%9B) 进行密钥交换，双方只要交换各自的 DH 参数(在 ServerKeyExchange 发送 Server params，在 ClientKeyExchange 发送 Client params)，不需要传递 Premaster secret，就可以各自算出这个预主密钥
 
 DH 的握手过程如下，大致过程与 RSA 类似，图中只表达如何生成预主密钥:
 
