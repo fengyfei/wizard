@@ -9,6 +9,8 @@
   * [Raft](algorithms/raft.md)
 * [Degisn Patterns](design-pattern/index.md)
   * [Creational Patterns](design-pattern/creational-patterns.md)
+  * [Structural Patterns](design-pattern/structural-patterns.md)
+  * [Behavioral Patterns](design-pattern/behavioral-patterns.md)
 * [git 源码阅读](git/index.md)
   * [数据结构]()
     * [Object](git/object.md)
