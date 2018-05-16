@@ -43,7 +43,6 @@ RFC 7540 定义了 HTTP/2 的协议规范和细节，本文的细节主要来自
 h1 和 h2 的报文对比:
 
 ![image](images/h1-message.png)
-
 ![image](images/h2-message.png)
 
 图中 h2 的报文是重组解析过后的，可以发现一些头字段发生了变化，而且所有头字段均小写
@@ -67,6 +66,11 @@ h1 和 h2 的报文对比:
 
 流的概念实现了单连接上多请求 - 响应并行，解决了线头阻塞的问题，减少了 TCP 连接数量和 TCP 连接慢启动造成的问题
 
+所以 http2 对于同一域名只需要创建一个连接，而不是像 http/1.1 那样创建 6~8 个连接:
+
+![image](images/ConnectionView-h1.png)
+![image](images/ConnectionView-h2.png)
+
 关于流详见: [How does it work ？- 流](#流---stream)
 
 #### 3、服务端推送 (Server Push)
@@ -86,15 +90,15 @@ Server-Push 主要是针对资源内联做出的优化，相较于 http/1.1 资�
 
 使用 [HPACK](https://httpwg.org/specs/rfc7541.html) 算法来压缩首部内容
 
-关于 HPACK 详见: [How does it work ？- HPACK](#hpack)
+关于 HPACK 详见: [How does it work ？- HPACK](#hpack-算法)
 
 #### 5、应用层的重置连接
 
 对于 HTTP/1 来说，是通过设置 tcp segment 里的 reset flag 来通知对端关闭连接的。这种方式会直接断开连接，下次再发请求就必须重新建立连接。HTTP/2 引入 RST_STREAM 类型的 frame，可以在不断开连接的前提下取消某个 request 的 stream，表现更好。
 
-#### 6、请求优先级和请求依赖设置
+#### 6、请求优先级设置
 
-一个 request 对应一个 stream 并分配一个 id，这样一个连接上可以有多个 stream，每个 stream 的 frame 可以随机的混杂在一起，接收方可以根据 stream id 将 frame 归属到各自不同的 request 里面，所以 HTTP/2 里的每个 stream 都可以设置优先级（Priority）和依赖（Dependency），解决了关键请求被阻塞的问题
+HTTP/2 里的每个 stream 都可以设置依赖 (Dependency) 和权重，可以按依赖树分配优先级，解决了关键请求被阻塞的问题
 
 #### 7、流量控制
 
@@ -302,14 +306,14 @@ GOAWAY 帧带有最大的那个流标识符 (比如图中第 29 帧是最大流)
 
 其状态转换:
 
-- 发送或者接收一个 HEADERS 帧会使空闲 `idle` 流变成打开 `open` 状态，其中 HEADERS 帧的 Stream Identifier 字段指明了流 id。同样的 HEADERS 帧也可以使一个流立即进入 half-closed 状态。
+- 发送或者接收一个 HEADERS 帧会使空闲 `idle` 流变成打开 `open` 状态，其中 HEADERS 帧的 Stream Identifier 字段指明了流 id。同样的 HEADERS 帧(带有 END_STREAM )也可以使一个流立即进入 half-closed 状态。
 - 服务端必须在一个打开 `open` 或者半关闭 (远端) `half-closed(remote)` 状态的流 (由客户端发起的) 上发送 PUSH_PROMISE 帧，其中 PUSH_PROMISE 帧的 Promised Stream ID 字段指定了一个预示的新流 (由服务端发起)，
   * 在服务端该新流会由空闲 `idle` 状态进入被保留的 (本地) `reserved(local)` 状态
   * 在客户端该新流会由空闲 `idle` 状态进入被保留的 (远端) `reserved(remote)` 状态
 
 > 在 [3.2 - Starting HTTP/2 for "http" URIs](https://httpwg.org/specs/rfc7540.html#discover-http) 中介绍了一种特殊情况:
 >> 客户端发起一个 HTTP/1.1 请求，请求带有 Upgrade 机制，想创建 h2c 连接，服务端同意升级返回 101 响应。
->> 升级之前发送的 HTTP/1.1 请求被分配一个流标识符 0x1，并被赋予默认优先级值。从客户端到服务端这个流 1 隐式地转为 "half-closed" 状态，因为作为 HTTP/1.1 请求它已经完成了。HTTP/2 连接开始后，流 1 用于响应。详细过程可以看下文的 [HTTP/2 的协议协商机制](#http/2-的协议协商机制)
+>> 升级之前发送的 HTTP/1.1 请求被分配一个流标识符 0x1，并被赋予默认优先级值。从客户端到服务端这个流 1 隐式地转为 "half-closed" 状态，因为作为 HTTP/1.1 请求它已经完成了。HTTP/2 连接开始后，流 1 用于响应。详细过程可以看下文的 [HTTP/2 的协议协商机制](#http2-的协议协商机制)
 
 此状态下接收到 HEADERS 和 PRIORITY 以外的帧被视为 PROTOCOL_ERROR
 
@@ -824,6 +828,11 @@ https://http2.akamai.com/demo
 
 https://http2.golang.org/
 
+网站启用 h2 的前后对比，使用 [WebPageTest](http://www.webpagetest.org/) 做的测试，第一张是 h1，第二张是 h2:
+
+![image](images/webtest-h1.png)
+![image](images/webtest-h2.png)
+
 ### 使用 HTTP/2 建议
 
 nginx 开启 HTTP2 只需在相应的 HTTPS 设置后加上 `http2` 即可
@@ -928,48 +937,103 @@ HTTP/2 支持 Server-Push，相比较内联优势更大效果更好
 
 ![image](images/google-dns.png)
 
+但是这好像也会造成一个问题，我使用 nginx 搭建的 webserver，有三个虚拟主机，它们共用一套证书，其中两个我显示地配置了 http2，而剩下一个我并没有配置 http2，结果我访问未配置 http2 的站点时也变成了 http2。
+
+我猜测应该是共用证书的原因，如果不想启用某个站点的 http2，那就不能共用证书
+
 ### 大图片传输碰到的问题
 
-![image](images/large-imgs-problem-0.png)
+先比较一下 h1 和 h2 的页面加载时间，图中绿色代表发起请求收到响应等待负载的时间，蓝色代表下载负载的时间:
 
-http/1.1 是在 6 个 TCP 连接上发起的请求，有明显先后顺序，与本文最开始的两张图片情况一致
+![image](images/imgs-loadtime-h1.png)
+![image](images/imgs-loadtime-h2.png)
 
-h2 则是在一个 TCP 连接上发起的请求，而且是同时发起，图中绿色代表发起请求等待响应的时间，蓝色代表收到响应开始接受负载的时间
+可以发现 h2 加载时间还比 h1 慢一点，特别是碰到大图片时差别更明显
 
-![image](images/large-imgs-problem-1.png)
+这篇文章对不同场景下 h1 和 h2 加载图片做了测试: [Real–world HTTP/2: 400gb of images per day](https://99designs.com/tech-blog/blog/2016/07/14/real-world-http-2-400gb-of-images-per-day/)
 
-可以明显地发现 h2 的请求速度远慢于 http/1.1，当然这里跟服务器也有点关系，h2 的图片是放我自己的服务器上网络带宽有限，而 http/1.1 的图片使用的是腾讯云的对象存储网络带宽会比我服务器好
+其结果是:
 
-而且这是在 Safari 上的测试结果，虽然慢但好歹 Safari 全下下来了，而我在 Chrome 上测试时后面的部分图片直接挂了，都报 `ERR_SPDY_PROTOCOL_ERROR` 错误
+- 对一个典型的富图像，延迟限制 (latency–bound) 的界面来说。使用一个高速，低延迟的连接，视觉完成度 (visual completion) 平均会快 5%。
 
-![image](images/chrome-spdyerror.png)
+- 对一个图像极其多，带宽限制 (bandwidth–bound) 的页面来说。使用同样的连接，视觉完成度平均将会慢 5–10%，但页面的整体加载时间实际是减少了，因为得益于连接延迟少。
 
-去看了下 `ERR_SPDY_PROTOCOL_ERROR` 出在哪，发现是 Server reset stream
+- 一个高延迟，低速度的连接(比如移动端的慢速 3G) 会对页面的视觉完成造成极大的延迟，但 h2 的视觉完成度明显更高更好。
+
+在所有的测试中，都可以看到: h2 使整体页面的加载速度提高了，并且在初次绘制 (initial render) 上做的更好，虽然第二种情况中视觉完成度略微下降，但总体效果还是好的
+
+视觉完成度下降的原因是因为没有 HTTP/1.x 同时连接数量的限制，h2 可以同时发起多张图片的请求，服务器可以同时响应图片的负载，可以从下面的动图中看到
+
+![image](images/safari-h2.gif)
+
+一旦图片下载完成，浏览器就会绘制出它们，然而，小图片下载后会渲染地更快，但是如果一个大图片恰好是初始的视图，那就会花费较长的时间加载，延迟视觉上的完成度。
+
+#### chrome bug
+
+上面的动图是在 Safari 上的测试结果，图片最后都下载成功了，而我在 Chrome 上测试时后面的部分图片直接挂了，都报 `ERR_SPDY_PROTOCOL_ERROR` 错误，而且是百分百复现
+
+![image](images/chrome-h2.gif)
+
+去看了下 `ERR_SPDY_PROTOCOL_ERROR` 出在哪，发现是 Server reset stream，应该是哪出错了导致流提前终止
 
 ![image](images/spdyerror-0.png)
 
-![image](images/spdyerror-1.png)
+然后再研究了一下 HTTP/2 的帧序列，发出的请求都在 629 号消息中响应成功了，但是返回的数据帧只有流 15 上的，实际收到的图片又不止流 15 对应的图片，这是为什么?
 
-然后再看一下 HTTP/2 的帧序列，发出的请求都在 629 号消息中响应成功了，但是返回的数据帧只有流 15 上的，实际收到的图片又不止流 15 对应的图片，这是为什么?
-
-![image](images/large-imgs-problem-2.png)
+![image](images/large-imgs-problem-0.png)
 
 后面我继续测试发现连续请求几张大图片，虽然 HEADERS 帧都打开的是不同的流，返回的响应的 HEADERS 帧也还是对应前面的流 ID，但是响应的 DATA 帧都是从第一个打开的流上返回的。
 
-如果是小图片的话，一个请求响应过后这个流就关闭了，下一张小图是在其自己对应的流上返回的。
+如果是小图片的话，一个请求响应过后这个流就关闭了，下一张小图是在其自己对应的流上返回的。只有连续几张大图会出现上述情形，这个机制很奇怪，我暂时还没有找到解释的文档。
 
-这个机制很奇怪，我暂时还没有找到解释的文档
+至于 chrome 为什么出错呢，看一下 TCP 报文就会发现所有数据在一个连接上发送，到后面 TCP 包会出现各种问题，丢包、重传、失序、重包等等，不清楚 Safari 是否也是这样，因为 wireshark 只能解 chrome 的包解不了 Safari 的包
 
-至于为什么 h2 返回大图更慢呢，看一下 TCP 报文就会发现所有数据在一个连接上发送，到后面 TCP 包会出现各种问题，丢包、重传、快速重传、失序、重包等等
+![image](images/large-imgs-problem-1.png)
 
-![image](images/large-imgs-problem-3.png)
+>《web 性能权威指南》中提及 HTTP/2 中一个 TCP 可能会造成的问题:
+> 虽然消除了 HTTP 队首阻塞现象，但 TCP 层次上仍存在队首阻塞问题；如果 TCP 窗口缩放被禁用，那带[宽延迟积效应](https://zh.wikipedia.org/wiki/%E5%B8%A6%E5%AE%BD%E6%97%B6%E5%BB%B6%E4%B9%98%E7%A7%AF)可能会限制连接的吞吐量；丢包时 TCP 拥塞窗口会缩小；
 
-但是为何 Chrome 会出错，而 Safari 不会，我还不清楚，因为 wireshark 解不了 Safari 的 HTTP/2 包
+TCP 是一方面原因，还有另一方面应该是浏览器策略问题，估计也是 chrome bug，对比两张动图你会发现，safari 接收负载是轮流接收，我们几个接收一点然后换几个人接收，直到所有都接受完；而 chrome 则是按顺序接收，这个接收完才轮到下一个接收，结果后面的图片可能长时间未响应就挂了。
 
-在这片文章中也提及了这种情况: [Real–world HTTP/2: 400gb of images per day](https://99designs.com/tech-blog/blog/2016/07/14/real-world-http-2-400gb-of-images-per-day/)
+#### 使用渐进式图片
 
->《web 性能权威指南》中提及 HTTP/2 下一个 TCP 可能会造成的问题:
-> 虽然消除了 HTTP 队首阻塞现象，但 TCP 层次上仍存在队首阻塞问题；如果 TCP 窗口缩放被禁用，那带宽延迟积效应可能会限制连接的吞吐量；丢包时 TCP 拥塞窗口会缩小；
+渐进式 jpg 代替普通 jpg 有利于提高视觉完成度，而且文件更小:
+
+输入 `convert --version` 看看是否已安装 [ImageMagic](http://www.imagemagick.org/)，如果没有先安装: Mac 可以用 `brew install imagemagick`，Centos 可以用 `yum install imagemagick`
+
+检测是否为 progressive jpeg，如果输出 None 说明不是 progressive jpeg；如果输出 JPEG 说明是 progressive jpeg:
+
+```
+$ identify -verbose filename.jpg | grep Interlace
+```
+
+将 basic jpeg 转换成 progressive jpeg，[interlace 参数](https://www.imagemagick.org/script/command-line-options.php#interlace):
+
+```
+$ convert -strip -interlace Plane source.jpg destination.jpg // 还可以指定质量 -quality 90
+
+// 批量处理
+$ for i in ./*.jpg; do convert -strip -interlace Plane $i ./progressive/$i; done
+```
+
+也可以转换 PNG 和 GIF，但是转换后的图片往往会更大，不推荐使用
+
+ImageMagic 还有很多强大的功能
+
+```
+// 图片缩放
+$ convert -resize 50%x50% source.jpg destination.jpg
+// 图片格式转换
+$ convert source.jpg destination.png
+// 配合 find 命令，将当前目录下大于 500kb 的图片按 85% 质量进行压缩
+$ find ./ -regex '.*\(jpg\|JPG\|png\|PNG\|bmp\|BMP\|jpeg\)' -size +500k -exec convert -strip +profile “*” -quality 85 {} {} \;
+```
+
+另外 photoshop 保存图片时也可以设置渐进或交错:
+
+渐进式图片：选择图片格式为 JPEG => 选中“连续”
+
+交错式图片：选择图片格式为 PNG/GIF => 选中“交错”
 
 ### SPDY 与 HTTP2 的关系
 
