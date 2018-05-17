@@ -12,7 +12,9 @@ TCP 实现里暴露出来的最主要的接口是 EndPoint，它对应 Socket �
 
 ![](../images/tcp_process.png)
 
-整个运行的核心在图中标红的两个循环里，其余的部分代码较少，实现也简单。endpoint 的 Listen 函数在 protocolListenLoop 中监听新的连接请求，主要处理三步握手的 SYN 报文和 ACK 报文，负责连接的被动建立。可以看到，这里会有一个**处于 SYN_RCVD 状态的半连接的队列**。建立好的连接通过一个长度为 **backlog** 的channel，把新建连接对应的 endpoint 放到 backlog 队列，然后执行 Accept 的逻辑。
+整个运行的核心在图中标红的两个循环里，其余的部分代码较少，实现也简单。endpoint 的 Listen 函数在 protocolListenLoop 中监听新的连接请求，主要处理三步握手的 SYN 报文和 ACK 报文，负责连接的被动建立。可以看到，这里会有一个**处于 SYN_RCVD 状态的半连接的队列**。建立好的连接通过一个长度为 **backlog** 的channel，这个 channel 可以理解为一个 全连接队列(也叫 Accept 队列)，把新建连接对应的 endpoint 放到 backlog 队列，然后执行 Accept 的逻辑。
+
+![](../images/handshake.png)
 
 需要注意的是，负责 Listen 的 endpoint 管理的是所有未完成的连接，而连接建立以后会获得一个新的 endpoint，专门负责那一个连接。
 
@@ -65,5 +67,5 @@ func protocolMainLoop() *tcpip.Error{
 }
 ```
 
-进入循环以后，就是 endpoint 的 sender 和 receiver 的工作了，TCP 实现的总体结构就是这样了。接下来需要仔细看看连接如何建立，如何三次握手，以及连接建立后如何控制流量与拥塞控制。
+进入循环以后，就是 endpoint 的 sender 和 receiver 的工作了，TCP 实现的总体结构就是这样了。接下来需要仔细看看连接如何建立，如何三次握手，以及连接建立后如何控制流量与拥塞控制以及保活。
 

@@ -345,7 +345,7 @@ func (*endpoint) MTU() uint32 {
 
 #### sniffer endpoint
 
-sniffer 意思是探测器，这个 endpoint 只是对一个正常的 endpoint 的包装，实现 LinkEndpoint 接口的函数都是调用它所包装的 endpoint。它所实现的功能是记录所有经过它的包，可以用它实现抓包。
+sniffer 意思是探测器，这个 endpoint 只是对一个正常的 endpoint 的包装，实现 LinkEndpoint 接口的函数都是调用它所包装的 endpoint 对应的函数。它所实现的功能是记录所有经过它的包，可以用它实现抓包。
 
 ```go
 type endpoint struct {

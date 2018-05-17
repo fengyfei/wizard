@@ -280,3 +280,4 @@ func (h *handshake) synRcvdState(s *segment) *tcpip.Error {
 }
 ```
 
+以上，基本就是建立 TCP 连接的完整过程。
