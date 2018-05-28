@@ -7,6 +7,7 @@
   * [IPFS](titan/ipfs.md)
 * [Algorithms](algorithms/index.md)
   * [Raft](algorithms/raft.md)
+* [Caddy](caddy/index.md)
 * [Degisn Patterns](design-pattern/index.md)
   * [Creational Patterns](design-pattern/creational-patterns.md)
   * [Structural Patterns](design-pattern/structural-patterns.md)
