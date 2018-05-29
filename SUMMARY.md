@@ -10,6 +10,7 @@
 * [Caddy](caddy/index.md)
   * [Plugin](caddy/plugin.md)
   * [Events](caddy/events.md)
+  * [Loader](caddy/loader.md)
 * [Degisn Patterns](design-pattern/index.md)
   * [Creational Patterns](design-pattern/creational-patterns.md)
   * [Structural Patterns](design-pattern/structural-patterns.md)
