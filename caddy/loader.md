@@ -179,6 +179,8 @@ func executeDirectives(inst *Instance, filename string,
 
 - DirectiveAction
 
+![Controller](./images/controller.svg)
+
 ```go
 func DirectiveAction(serverType, dir string) (SetupFunc, error) {
 	// 查找 server type 类型插件集
