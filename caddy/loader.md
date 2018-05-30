@@ -105,3 +105,95 @@ func (l *lexer) next() bool {
 	}
 }
 ```
+
+### executeDirectives
+
+```go
+func executeDirectives(inst *Instance, filename string,
+	directives []string, sblocks []caddyfile.ServerBlock, justValidate bool) error {
+	// map of server block ID to map of directive name to whatever.
+	storages := make(map[int]map[string]interface{})
+
+	// 保证指令的执行顺序
+	for _, dir := range directives {
+		for i, sb := range sblocks {
+			var once sync.Once
+
+			// ServerBlock 的 storage 不存在
+			if _, ok := storages[i]; !ok {
+				storages[i] = make(map[string]interface{})
+			}
+
+			for j, key := range sb.Keys {
+				// 执行 ServerBlock 的指令
+				if tokens, ok := sb.Tokens[dir]; ok {
+					// 创建 Controller
+					controller := &Controller{
+						instance:  inst,
+						Key:       key,
+						Dispenser: caddyfile.NewDispenserTokens(filename, tokens),
+						OncePerServerBlock: func(f func() error) error {
+							var err error
+							once.Do(func() {
+								err = f()
+							})
+							return err
+						},
+						ServerBlockIndex:    i,
+						ServerBlockKeyIndex: j,
+						ServerBlockKeys:     sb.Keys,
+						ServerBlockStorage:  storages[i][dir],
+					}
+
+					setup, err := DirectiveAction(inst.serverType, dir)
+					if err != nil {
+						return err
+					}
+
+					err = setup(controller)
+					if err != nil {
+						return err
+					}
+
+					storages[i][dir] = controller.ServerBlockStorage // persist for this server block
+				}
+			}
+		}
+
+		if !justValidate {
+			// See if there are any callbacks to execute after this directive
+			if allCallbacks, ok := parsingCallbacks[inst.serverType]; ok {
+				callbacks := allCallbacks[dir]
+				for _, callback := range callbacks {
+					if err := callback(inst.context); err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+```
+
+- DirectiveAction
+
+```go
+func DirectiveAction(serverType, dir string) (SetupFunc, error) {
+	// 查找 server type 类型插件集
+	if stypePlugins, ok := plugins[serverType]; ok {
+		// 查找 server type 下指令插件
+		if plugin, ok := stypePlugins[dir]; ok {
+			return plugin.Action, nil
+		}
+	}
+	if genericPlugins, ok := plugins[""]; ok {
+		if plugin, ok := genericPlugins[dir]; ok {
+			return plugin.Action, nil
+		}
+	}
+	return nil, fmt.Errorf("no action found for directive '%s' with server type '%s' (missing a plugin?)",
+		dir, serverType)
+}
+```
