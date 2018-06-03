@@ -14,6 +14,7 @@
   * [HTTP](caddy/http/index.md)
 * [Prometheus](prometheus/index.md)
   * [Storage](prometheus/storage.md)
+  * [Discovery](prometheus/discovery.md)
 * [Degisn Patterns](design-pattern/index.md)
   * [Creational Patterns](design-pattern/creational-patterns.md)
   * [Structural Patterns](design-pattern/structural-patterns.md)
