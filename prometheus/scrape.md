@@ -14,6 +14,10 @@ Appender 请参照 [Storage](storage.md).
 
 ![Scrape Pool Overview](images/strape_pool_overview.svg)
 
+全局流程如下：
+
+![Scrape Overview](images/scrape_overview.svg)
+
 ### sync
 
 启动 loop：
@@ -187,5 +191,56 @@ mainLoop:
 	close(sl.stopped)
 
 	sl.endOfRunStaleness(last, ticker, interval)
+}
+```
+
+### targetScraper.scrape
+
+```go
+func (s *targetScraper) scrape(ctx context.Context, w io.Writer) error {
+	// 创建请求
+	if s.req == nil {
+		req, err := http.NewRequest("GET", s.URL().String(), nil)
+		if err != nil {
+			return err
+		}
+		req.Header.Add("Accept", acceptHeader)
+		req.Header.Add("Accept-Encoding", "gzip")
+		req.Header.Set("User-Agent", userAgentHeader)
+		req.Header.Set("X-Prometheus-Scrape-Timeout-Seconds", fmt.Sprintf("%f", s.timeout.Seconds()))
+
+		s.req = req
+	}
+
+	// 执行 HTTP 请求操作
+	resp, err := ctxhttp.Do(ctx, s.client, s.req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("server returned HTTP status %s", resp.Status)
+	}
+
+	if resp.Header.Get("Content-Encoding") != "gzip" {
+		_, err = io.Copy(w, resp.Body)
+		return err
+	}
+
+	if s.gzipr == nil {
+		s.buf = bufio.NewReader(resp.Body)
+		s.gzipr, err = gzip.NewReader(s.buf)
+		if err != nil {
+			return err
+		}
+	} else {
+		s.buf.Reset(resp.Body)
+		s.gzipr.Reset(s.buf)
+	}
+
+	_, err = io.Copy(w, s.gzipr)
+	s.gzipr.Close()
+	return err
 }
 ```
