@@ -334,7 +334,7 @@ RSA 历史悠久，支持度好，但不支持 [完美前向安全 - PFS(Perfect
 使用 RSA 进行密钥交换的握手过程与前面说明的基本一致，只是没有 ServerKeyExchange 消息，其中协商密钥涉及到三个参数 (客户端随机数 random_C、服务端随机数 random_S、预主密钥 Premaster secret)，
 其中前两个随机数和协商使用的算法是明文的很容易获取，最后一个 Premaster secret 会用服务器提供的公钥加密后传输给服务器 (密钥交换)，如果这个预主密钥被截取并破解则协商密钥也可以被破解。
 
-RSA 算法的细节见: [wiki](https://zh.wikipedia.org/wiki/RSA%E5%8A%A0%E5%AF%86%E6%BC%94%E7%AE%97%E6%B3%95)
+RSA 算法的细节见: [wiki](https://zh.wikipedia.org/wiki/RSA%E5%8A%A0%E5%AF%86%E6%BC%94%E7%AE%97%E6%B3%95) 和 [RSA算法原理（二）- 阮一峰](http://www.ruanyifeng.com/blog/2013/07/rsa_algorithm_part_two.html)
 
 RSA 的算法核心思想是利用了极大整数 [因数分解](https://zh.wikipedia.org/wiki/%E6%95%B4%E6%95%B0%E5%88%86%E8%A7%A3) 的计算复杂性
 

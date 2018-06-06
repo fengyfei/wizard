@@ -1,14 +1,15 @@
 {
   "plugins": [
-  	"expandable-chapters",
-  	"include-codeblock",
-    "page-toc"
+    "expandable-chapters",
+    "include-codeblock",
+    "page-toc",
+    "mathjax"
   ],
   "pluginsConfig": {
-     "expandable-chapters":{},
-     "selector": ".markdown-section h1, .markdown-section h2, .markdown-section h3, .markdown-section h4",
-     "position": "before-first",
-     "showByDefault": true
+    "expandable-chapters": {},
+    "selector": ".markdown-section h1, .markdown-section h2, .markdown-section h3, .markdown-section h4",
+    "position": "before-first",
+    "showByDefault": true
   },
   "include-codeblock": {
     "template": "ace",

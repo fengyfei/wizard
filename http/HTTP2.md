@@ -991,7 +991,7 @@ HTTP/2 支持 Server-Push，相比较内联优势更大效果更好
 ![image](images/large-imgs-problem-1.png)
 
 >《web 性能权威指南》中提及 HTTP/2 中一个 TCP 可能会造成的问题:
-> 虽然消除了 HTTP 队首阻塞现象，但 TCP 层次上仍存在队首阻塞问题；如果 TCP 窗口缩放被禁用，那带[宽延迟积效应](https://zh.wikipedia.org/wiki/%E5%B8%A6%E5%AE%BD%E6%97%B6%E5%BB%B6%E4%B9%98%E7%A7%AF)可能会限制连接的吞吐量；丢包时 TCP 拥塞窗口会缩小；
+> 虽然消除了 HTTP 队首阻塞现象，但 TCP 层次上仍存在队首阻塞问题；如果 TCP 窗口缩放被禁用，那[带宽延迟积效应](https://zh.wikipedia.org/wiki/%E5%B8%A6%E5%AE%BD%E6%97%B6%E5%BB%B6%E4%B9%98%E7%A7%AF)可能会限制连接的吞吐量；丢包时 TCP 拥塞窗口会缩小；
 
 TCP 是一方面原因，还有另一方面应该是浏览器策略问题，估计也是 chrome bug，对比两张动图你会发现，safari 接收负载是轮流接收，我们几个接收一点然后换几个人接收，直到所有都接受完；而 chrome 则是按顺序接收，这个接收完才轮到下一个接收，结果后面的图片可能长时间未响应就挂了。
 
@@ -1013,10 +1013,10 @@ $ identify -verbose filename.jpg | grep Interlace
 $ convert -strip -interlace Plane source.jpg destination.jpg // 还可以指定质量 -quality 90
 
 // 批量处理
-$ for i in ./*.jpg; do convert -strip -interlace Plane $i ./progressive/$i; done
+$ for i in ./*.jpg; do convert -strip -interlace Plane $i $i; done
 ```
 
-也可以转换 PNG 和 GIF，但是转换后的图片往往会更大，不推荐使用
+也可以转换 PNG 和 GIF，但是我试过 `convert -strip -interlace Plane source.png destination.png` 但转换后的图片往往会更大，不推荐这么用，可以 convert source.png destination.jpg
 
 ImageMagic 还有很多强大的功能
 
@@ -1025,9 +1025,11 @@ ImageMagic 还有很多强大的功能
 $ convert -resize 50%x50% source.jpg destination.jpg
 // 图片格式转换
 $ convert source.jpg destination.png
-// 配合 find 命令，将当前目录下大于 500kb 的图片按 85% 质量进行压缩
-$ find ./ -regex '.*\(jpg\|JPG\|png\|PNG\|bmp\|BMP\|jpeg\)' -size +500k -exec convert -strip +profile “*” -quality 85 {} {} \;
+// 配合 find 命令，将当前目录下大于 100kb 的图片按 75% 质量进行压缩
+$ find -E . -iregex '.*\.(jpg|png|bmp)' -size +100k -exec convert -strip +profile “*” -quality 75 {} {} \;
 ```
+
+png 压缩推荐使用 [pngquant](https://pngquant.org/)
 
 另外 photoshop 保存图片时也可以设置渐进或交错:
 
