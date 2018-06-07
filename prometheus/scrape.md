@@ -14,7 +14,9 @@ Appender 请参照 [Storage](storage.md).
 
 ![Scrape Pool Overview](images/strape_pool_overview.svg)
 
-全局流程如下：
+流程概览如下：
+
+![Scrape Procedure](images/scrape_procedure.svg)
 
 ![Scrape Overview](images/scrape_overview.svg)
 
