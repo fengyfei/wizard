@@ -90,8 +90,6 @@
   * [Default Interface Implementation](tricks/default-interface-impl.md)
   * [Concurrent Models]()
     * [Attach Mode](tricks/chan-waitgroup-attach.md)
-* [Mattermost Server]()
-  * [Overview](mattermost/overview.md)
 * [ETCD 3.3 源码阅读](etcd/index.md)
   * [Gateway](etcd/gateway.md)
   * [Server]()
