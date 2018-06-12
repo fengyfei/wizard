@@ -46,7 +46,7 @@ SRTT(smooth RTT)，RTTnew 是新测量的值。如上，为了防止 RTT 抖动�
 
 下图是一个例子：
 
-![图片来源：http://blog.csdn.net/q1007729991/article/details/70196099](http://img.blog.csdn.net/20170422182458581?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvcTEwMDc3Mjk5OTE=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+![](./images/tcp_retrans.png)
 
 如上，在时间为0.22531时开始第一次重传，此后重传时间开始指数增大，（在尝试了8次后停下，说明其 R2 的值可能为8）。
 

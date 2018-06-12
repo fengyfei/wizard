@@ -12,6 +12,7 @@
     * [BFS](foundation/algorithms/search/breadth-first-search.md)
   * [IP](foundation/tcp/index.md)
     * [IP 地址概述](foundation/ip/ip_addr.md)
+    * [IP 协议](foundation/ip/internet_protocol.md)
   * [TCP](foundation/tcp/index.md)
     * [TCP Conn Management](foundation/tcp/tcp-conn.md)
     * [TCP Retransmission](foundation/tcp/tcp_retransmission.md)
