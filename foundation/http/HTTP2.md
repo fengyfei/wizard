@@ -219,11 +219,13 @@ HEADERS 帧有以下标识 (flags):
 
 HTTP/2 里的首部字段也是一个键具有一个或多个值。这些首部字段用于 HTTP 请求和响应消息，也用于服务端推送操作。
 
-首部列表是零个或多个首部字段的集合。当通过连接传送时，首部列表被 `HTTP header compression` 序列化成首部块。然后，序列化的首部块又被划分成一个或多个叫做首部块片段 (Header Block Fragment) 的字节序列，并通过 HEADERS、PUSH_PROMISE，或者 CONTINUATION 帧进行有效负载传送。
+首部列表 (Header List) 是零个或多个首部字段 (Header Field) 的集合。当通过连接传送时，首部列表通过压缩算法(即下文 HPACK) 序列化成首部块 (Header Block)。然后，序列化的首部块又被划分成一个或多个叫做首部块片段 (Header Block Fragment) 的字节序列，并通过 HEADERS、PUSH_PROMISE，或者 CONTINUATION 帧进行有效负载传送。
 
 > Cookie 首部字段需要 HTTP 映射特殊对待，见 [8.1.2.5. Compressing the Cookie Header Field](https://httpwg.org/specs/rfc7540.html#CompressCookie)
 
-一个完整的 header 块有两种可能，(1) 一个 HEADERS 帧或 PUSH_PROMISE 帧加上设置 END_HEADERS flag，(2) 一个未设置 END_HEADERS flag 的 HEADERS 帧或 PUSH_PROMISE 帧加上多个 CONTINUATION 帧，其中最后一个 CONTINUATION 帧设置 END_HEADERS flag
+一个完整的首部块有两种可能
+- 一个 HEADERS 帧或 PUSH_PROMISE 帧加上设置 END_HEADERS flag
+- 一个未设置 END_HEADERS flag 的 HEADERS 帧或 PUSH_PROMISE 帧，加上多个 CONTINUATION 帧，其中最后一个 CONTINUATION 帧设置 END_HEADERS flag
 
 必须将首部块作为连续的帧序列传送，不能插入任何其他类型或其他流的帧。尾帧设置 END_HEADERS 标识代表首部块结束，这让首部块在逻辑上等价于一个单独的帧。接收端连接片段重组首部块，然后解压首部块重建首部列表。
 
@@ -820,6 +822,382 @@ TLS 加密中在 Client-Hello 和 Server-Hello 的过程中通过 [ALPN](https:/
 
 ![image](images/hpack.png)
 
+上图来自 Ilya Grigorik 的 PPT - [HTTP/2 is here, let's optimize!](#references)
+
+可以清楚地看到 HTTP2 头部使用的也是键值对形式的值，而且 HTTP1 当中的请求行以及状态行也被分割成键值对，还有所有键都是小写，不同于 HTTP1。除此之外，还有一个包含静态索引表和动态索引表的索引空间，实际传输时会把头部键值表压缩，使用的算法即 HPACK，其原理就是匹配当前连接存在的索引空间，若某个键值已存在，则用相应的索引代替首部条目，比如 “:method: GET” 可以匹配到静态索引中的 index 2，传输时只需要传输一个包含 2 的字节即可；若索引空间中不存在，则用字符编码传输，字符编码可以选择哈夫曼编码，然后分情况判断是否需要存入动态索引表中
+
+#### 索引表
+
+##### 静态索引
+
+静态索引表是固定的，对于客户端服务端都一样，目前协议商定的静态索引包含 61 个键值，详见 [Static Table Definition - RFC 7541](https://httpwg.org/specs/rfc7541.html#static.table.definition)
+
+比如前几个如下
+
+| 索引  | 字段值      | 键值         |
+| :---- | :---------- | :----------- |
+| index | Header Name | Header Value |
+| 1     | :authority  |
+| 2     | :method     | GET          |
+| 3     | :method     | POST         |
+| 4     | :path       | /            |
+| 5     | :path       | /index.html  |
+| 6     | :scheme     | http         |
+| 7     | :scheme     | https        |
+| 8     | :status     | 200          |
+
+##### 动态索引
+
+动态索引表是一个 FIFO 队列维护的有空间限制的表，里面含有非静态表的索引。
+动态索引表是需要连接双方维护的，其内容基于连接上下文，一个 HTTP2 连接有且仅有一份动态表。
+当一个首部匹配不到索引时，可以选择把它插入动态索引表中，下次同名的值就可能会在表中查到索引并替换。
+但是并非所有首部键值都会存入动态索引，因为动态索引表是有空间限制的，最大值由 SETTING 帧中的 SETTINGS_HEADER_TABLE_SIZE (默认 4096 字节) 设置
+
+- 如何计算动态索引表的大小 (Table Size):
+
+大小均以字节为单位，动态索引表的大小等于所有条目大小之和，每个条目的大小 = 字段长度 + 键值长度 + 32
+
+> 这个额外的 32 字节是预估的条目开销，比如一个条目使用了两个 64-bit 指针分别指向字段和键值，并使用两个 64-bit 整数来记录字段和键值的引用次数
+>
+> golang 实现也是加上了 32: [golang.org/x/net/http2/hpack/hpack.go#L61](https://github.com/golang/net/blob/db08ff08e8622530d9ed3a0e8ac279f6d4c02196/http2/hpack/hpack.go#L61)
+
+SETTING 帧规定了动态表的最大大小，但编码器可以另外选择一个比 SETTINGS_HEADER_TABLE_SIZE 小的值作为动态表的有效负载量
+
+- 如何更新动态索引表的最大容量
+
+修改最大动态表容量可以发送一个 `dynamic table size update` 信号来更改:
+
+```
++---+---+---+---+---+---+---+---+
+| 0 | 0 | 1 |   Max size (5+)   |
++---+---------------------------+
+```
+
+前缀 001 代表此字节为 `dynamic table size update` 信号，后面使用 **N=5 的整数编码方法**表示新的最大动态表容量(不能超过 SETTINGS_HEADER_TABLE_SIZE)，其计算方法下文会介绍。
+
+需要注意的是这个信号必须在首部块发送之前或者两个首部块传输的间隔发送，可以通过发送一个 Max size 为 0 的更新信号来清空现有动态表
+
+- 动态索引表什么时候需要驱逐条目
+
+1.  每当出现表大小更新的信号时，需要判断并驱逐队尾的条目，即旧的索引，直到当前大小小于等于新的容量
+2.  每当插入新条目时，需要判断并驱逐队尾的条目，直到当前大小小于等于容量。这个情形下插入一个比 Max size 还大的新条目不会视作错误，但其结果是会清空动态索引表
+
+> 关于动态索引表如何管理的，推荐看下 golang 的实现: [golang.org/x/net/http2/hpack/hpack.go#L157](https://github.com/golang/net/blob/db08ff08e8622530d9ed3a0e8ac279f6d4c02196/http2/hpack/hpack.go#L157)，通过代码能更明白这个过程
+
+##### 索引地址空间
+
+由静态索引表和动态索引表可以组成一个索引地址空间:
+
+```
+  <----------  Index Address Space ---------->
+  <-- Static  Table -->  <-- Dynamic Table -->
+  +---+-----------+---+  +---+-----------+---+
+  | 1 |    ...    | s |  |s+1|    ...    |s+k|
+  +---+-----------+---+  +---+-----------+---+
+                         ⍋                   |
+                         |                   ⍒
+                  Insertion Point      Dropping Point
+```
+目前 s 就是 61，而有新键值要插入动态索引表时，从 index 62 开始插入队列，所以动态索引表中索引从小到大依次存着从新到旧的键值
+
+#### 编码类型表示
+
+HPACK 编码使用两种原始类型: 无符号可变长度整数和八位字节表示的字符串，相应地规定了以下两种编码方式
+
+##### 整数编码
+
+一个整数编码可以用于表示字段索引值、首部条目索引值或者字符串长度。
+一个整数编码含两部分: 一个前缀字节和可选的后跟字节序列，只有前缀字节不足以表达整数值时才需要后跟字节，**前缀字节中可用比特位 N 是整数编码的一个参数**
+
+比如下面所示的是一个 N=5 的整数编码(前三比特用于其他标识)，如果我们要编码的整数值小于 2^N - 1，直接用一个前缀字节表示即可，比如 10 就用 `???01010` 表示
+
+```
++---+---+---+---+---+---+---+---+
+| ? | ? | ? |       Value       |
++---+---+---+-------------------+
+```
+
+如果要编码的整数值 X 大于等于 2^N - 1，前缀字节的可用比特位都设成 1，然后把 X 减去 2^N - 1 得到值 R，并用一个或多个字节序列表示 R，字节序列中每个字节的最高有效位 (msb) 用于表示是否结束，**msb 设为 0 时代表是最后一个字节**。具体编码看下面的伪代码和例子
+
+```
++---+---+---+---+---+---+---+---+
+| ? | ? | ? | 1   1   1   1   1 |
++---+---+---+-------------------+
+| 1 |    Value-(2^N-1) LSB      |
++---+---------------------------+
+               ...
++---+---------------------------+
+| 0 |    Value-(2^N-1) MSB      |
++---+---------------------------+
+```
+
+编码:
+```
+if I < 2^N - 1, encode I on N bits
+else
+    encode (2^N - 1) on N bits
+    I = I - (2^N - 1)
+    while I >= 128
+         encode (I % 128 + 128) on 8 bits
+         I = I / 128
+    encode I on 8 bits
+```
+解码:
+```
+decode I from the next N bits
+if I < 2^N - 1, return I
+else
+    M = 0
+    repeat
+        B = next octet
+        I = I + (B & 127) * 2^M
+        M = M + 7
+    while B & 128 == 128
+    return I
+```
+比如使用 N=5 的整数编码表示 1337:
+
+1337 大于 31 (2^5 - 1), 将前缀字节后五位填满 1
+
+I = 1337 - (2^5 - 1) = 1306
+
+I 仍然大于 128, I % 128 = 26, 26 + 128 = 154
+
+154 二进制编码: 10011010, 这即是第一个后跟字节
+
+I = 1306 / 128 = 10, I 小于 128, 循环结束
+
+将 I 编码成二进制: 00001010, 这即是最后一个字节
+
+```
++---+---+---+---+---+---+---+---+
+| X | X | X | 1 | 1 | 1 | 1 | 1 |  Prefix = 31, I = 1306
+| 1 | 0 | 0 | 1 | 1 | 0 | 1 | 0 |  1306 >= 128, encode(154), I=1306/128=10
+| 0 | 0 | 0 | 0 | 1 | 0 | 1 | 0 |  10 < 128, encode(10), done
++---+---+---+---+---+---+---+---+
+```
+解码时读取第一个字节，发现后五位 (11111) 对应的值 I 等于 31(>= 2^N - 1)，说明还有后跟字节；令 M=0，继续读下一个字节 B，I = I + (B & 127) * 2^M = 31 + 26 * 1 = 57，M = M + 7 = 7，最高有效位为 1，表示字节序列未结束，B 指向下一个字节；I = I + (B & 127) * 2^M = 57 + 10 * 128 = 1337，最高有效位为 0，表示字节码结束，返回 I
+
+> 这里也可以这样处理 1306: 1306 = 0x51a = (0101 0001 1010)B，将 bit 序列从低到高按 7 个一组分组，则有第一组 001 1010，第二组 000 1010，加上最高有效位 0/1 便与上面的后跟字节对应
+
+##### 字符编码
+
+一个字符串可能代表 Header 条目的字段或者键值。字符编码使用字节序列表示，要么直接使用字符的八位字节码要么使用哈夫曼编码。
+
+```
++---+---+---+---+---+---+---+---+
+| H |    String Length (7+)     |
++---+---------------------------+
+|  String Data (Length octets)  |
++-------------------------------+
+```
+
+- H: 一个比特位表示是否使用哈夫曼编码
+- String Length: 代表字节序列长度，即 String Data 的长度，使用 N=7 的整数编码方式表示
+- String Data: 字符串的八位字节码序列表示，如果 H 为 0，则此处就是原字符的八位字节码表示；如果 H 为 1，则此处为原字符的哈夫曼编码
+
+RFC 7541 给出了一份字符的哈夫曼编码表: [Huffman Code](https://httpwg.org/specs/rfc7541.html#huffman.code)，这是基于大量 HTTP 首部数据生成的哈夫曼编码。
+- 当中第一列 (sym) 表示要编码的字符，最后的特殊字符 “EOS” 代表字符串结束
+- 第二列 (code as bits) 是二进制哈夫曼编码，向最高有效位对齐
+- 第三列 (code as hex) 是十六进制哈夫曼编码，向最低有效位对齐
+- 最后一列 (len) 代表编码长度，单位 bit
+
+使用哈夫曼编码可能存在编码不是整字节的，会在后面填充 1 使其变成整字节
+
+比如下面的例子:
+
+![Literal Header Field with Incremental Indexing - Indexed Name](images/Literal-Header-Field-with-Incremental-Indexing-IndexedName.png)
+
+`:authority: blog.wangriyu.wang` 首部对应的编码为:
+
+```
+41 8e 8e 83 cc bf 81 d5    35 86 f5 6a fe 07 54 df
+```
+
+`Literal Header Field with Incremental Indexing — Indexed Name` 的编码格式见下文
+
+41 (0100 0001) 表示字段存在索引值 1，即对应静态表中第一项 :authority
+
+8e (1000 1110) 最高有效位为 1 表示键值使用哈夫曼编码，000 1110 表示字节序列长度为 14
+
+后面 `8e 83 cc bf 81 d5 35 86 f5 6a fe 07 54 df` 是一段哈夫曼编码序列
+
+由哈夫曼编码表可知 100011 -> 'b', 101000 -> 'l', 00111 -> 'o', 100110 -> 'g', 010111 -> '.', 1111000 -> 'w', 00011 -> 'a', 101010 -> 'n', 100110 -> 'g', 101100 -> 'r', 00110 -> 'i', 1111010 -> 'y', 101101 -> 'u'
+
+```
+8e 83 cc bf 81 d5 35 86 f5 6a fe 07 54 df
+                             |
+                             ⍒
+1000 1110 1000 0011 1100 1100 1011 1111 1000 0001 1101 0101 0011 0101 1000 0110 1111 0101 0110 1010 1111 1110 0000 0111 0101 0100 1101 1111
+                             |
+                             ⍒
+100011 101000 00111 100110 010111 1111000 00011 101010 100110 101100 00110 1111010 101101 010111 1111000 00011 101010 100110 11111
+                             |
+                             ⍒
+blog.wangriyu.wang  最后 11111 用于填充
+```
+
+#### 二进制编码
+
+现在开始是 HPACK 真正的编解码规范
+
+##### 已索引首部条目表示 (Indexed Header Field Representation)
+
+- `Indexed Header Field`
+
+以 1 开始为标识，能在索引空间匹配到索引的首部会替换成这种形式，后面的 index 使用上述的整数编码方式且 N = 7。
+比如 `:method: GET` 可以用 0x82，即 10000010 表示
+```
++---+---+---+---+---+---+---+---+
+| 1 |        Index (7+)         |
++---+---------------------------+
+```
+
+![Indexed Header Field](images/Indexed-Header-Field.png)
+
+##### 未索引文字首部条目表示 (Literal Header Field Representation)
+
+尚未被索引的首部有三种表示形式，第一种会添加进索引，第二种对于当前跳来说不会添加进索引，第三种绝对不被允许添加进索引
+
+1.  会添加索引的文字首部 (Literal Header Field with Incremental Indexing)
+
+以 01 开始为标识，此首部会加入到解码后的首部列表 (Header List) 中并且会把它**作为新条目插入到动态索引表中**
+
+- `Literal Header Field with Incremental Indexing — Indexed Name`
+
+如果字段已经存在索引，但键值未被索引，比如首部 `:authority: blog.wangriyu.wang` 的字段 `:authority` 已存在索引但键值 `blog.wangriyu.wang` 不存在索引，则会替换成如下形式 (index 使用 N=6 的整数编码表示)
+```
++---+---+---+---+---+---+---+---+
+| 0 | 1 |      Index (6+)       |
++---+---+-----------------------+
+| H |     Value Length (7+)     |
++---+---------------------------+
+| Value String (Length octets)  |
++-------------------------------+
+```
+
+![Literal Header Field with Incremental Indexing - Indexed Name](images/Literal-Header-Field-with-Incremental-Indexing-IndexedName.png)
+
+- `Literal Header Field with Incremental Indexing — New Name`
+
+如果字段和键值均未被索引，比如 `upgrade-insecure-requests: 1`，则会替换成如下形式
+```
++---+---+---+---+---+---+---+---+
+| 0 | 1 |           0           |
++---+---+-----------------------+
+| H |     Name Length (7+)      |
++---+---------------------------+
+|  Name String (Length octets)  |
++---+---------------------------+
+| H |     Value Length (7+)     |
++---+---------------------------+
+| Value String (Length octets)  |
++-------------------------------+
+```
+
+![Literal Header Field with Incremental Indexing — New Name](images/Literal-Header-Field-with-Incremental-Indexing-NewName.png)
+
+2.  不添加索引的首部 (Literal Header Field without Indexing)
+
+以 0000 开始为标识，此首部会加入到解码后的首部列表中，但**不会插入到动态索引表中**
+
+- `Literal Header Field without Indexing — Indexed Name`
+
+如果字段已经存在索引，但键值未被索引，则会替换成如下形式 (index 使用 N=4 的整数编码表示)
+```
++---+---+---+---+---+---+---+---+
+| 0 | 0 | 0 | 0 |  Index (4+)   |
++---+---+-----------------------+
+| H |     Value Length (7+)     |
++---+---------------------------+
+| Value String (Length octets)  |
++-------------------------------+
+```
+
+![Literal Header Field without Indexing - Indexed Name](images/Literal-Header-Field-without-Indexing-IndexedName.png)
+
+- `Literal Header Field without Indexing — New Name`
+
+如果字段和键值均未被索引，则会替换成如下形式。比如 `strict-transport-security: max-age=63072000; includeSubdomains`
+
+```
++---+---+---+---+---+---+---+---+
+| 0 | 0 | 0 | 0 |       0       |
++---+---+-----------------------+
+| H |     Name Length (7+)      |
++---+---------------------------+
+|  Name String (Length octets)  |
++---+---------------------------+
+| H |     Value Length (7+)     |
++---+---------------------------+
+| Value String (Length octets)  |
++-------------------------------+
+```
+
+![Literal Header Field without Indexing - New Name](images/Literal-Header-Field-without-Indexing-NewName.png)
+
+3.  绝对不添加索引的首部 (Literal Header Field Never Indexed)
+
+这与上一种首部类似，只是标识为 0001，首部也是会添加进解码后的首部列表中但不会插入动态更新表。
+
+区别在于这类首部发出是什么格式表示，接收也是一样的格式，作用于每一跳 (hop)，如果中间通过代理，代理必须原样转发不能另行编码。
+
+而上一种首部只是作用当前跳，通过代理后可能会被重新编码
+
+golang 实现中使用一个 `Sensitive` 标明哪些字段是绝对不添加索引的: [golang.org/x/net/http2/hpack/hpack.go#L41](https://github.com/golang/net/blob/db08ff08e8622530d9ed3a0e8ac279f6d4c02196/http2/hpack/hpack.go#L41)
+
+RFC 文档中详细说明了这么做的原因: [Never-Indexed Literals](https://httpwg.org/specs/rfc7541.html#never.indexed.literals)
+
+表示形式除了标识其他都跟上一种首部一样:
+
+- `Literal Header Field Never Indexed — Indexed Name`
+
+```
++---+---+---+---+---+---+---+---+
+| 0 | 0 | 0 | 1 |  Index (4+)   |
++---+---+-----------------------+
+| H |     Value Length (7+)     |
++---+---------------------------+
+| Value String (Length octets)  |
++-------------------------------+
+```
+
+- `Literal Header Field Never Indexed — New Name`
+
+```
++---+---+---+---+---+---+---+---+
+| 0 | 0 | 0 | 1 |       0       |
++---+---+-----------------------+
+| H |     Name Length (7+)      |
++---+---------------------------+
+|  Name String (Length octets)  |
++---+---------------------------+
+| H |     Value Length (7+)     |
++---+---------------------------+
+| Value String (Length octets)  |
++-------------------------------+
+```
+
+##### 动态表最大容量更新 (Dynamic Table Size Update)
+
+以 001 开始为标识，作用前面已经提过
+
+```
++---+---+---+---+---+---+---+---+
+| 0 | 0 | 1 |   Max size (5+)   |
++---+---------------------------+
+```
+
+![Literal Header Field without Indexing - Indexed Name](images/Dynamic-Table-Size-Update-0.png)
+
+可以发送 Max Size 为 0 的更新来清空动态索引表
+
+![Literal Header Field without Indexing - Indexed Name](images/Dynamic-Table-Size-Update-1.png)
+
+#### 实例
+
+RFC 中给出了很多实例 [Examples - RFC 7541](https://httpwg.org/specs/rfc7541.html#examples)，推荐看一遍加深理解
+
 ## What then ?
 
 ### HTTP/2 演示
@@ -938,8 +1316,6 @@ HTTP/2 支持 Server-Push，相比较内联优势更大效果更好
 ![image](images/google-dns.png)
 
 但是这好像也会造成一个问题，我使用 nginx 搭建的 webserver，有三个虚拟主机，它们共用一套证书，其中两个我显示地配置了 http2，而剩下一个我并没有配置 http2，结果我访问未配置 http2 的站点时也变成了 http2。
-
-我猜测应该是共用证书的原因，如果不想启用某个站点的 http2，那就不能共用证书
 
 ### 大图片传输碰到的问题
 
@@ -1064,6 +1440,8 @@ C 语言实现的 HTTP/2，可以用它调试 HTTP/2 请求
 直接 `brew install nghttp2` 就可以安装，安装好后输入 `nghttp -nv https://nghttp2.org` 就可以查看 h2 请求
 
 ![image](images/nghttp2.png)
+
+- 除 nghttp2 外还可以用 h2i 测试 http2: https://github.com/golang/net/blob/master/http2/h2i/README.md
 
 - 还可以用 wireshark 解 h2 的包，不过得设置浏览器提供的对称协商密钥或者服务器提供的私钥，具体方法看此文: [使用 Wireshark 调试 HTTP/2 流量](https://imququ.com/post/http2-traffic-in-wireshark.html)
 
