@@ -33,6 +33,7 @@
     * [Hash](foundation/database/basic-hash.md)
   * [OS](foundation/os/index.md)
     * [process](foundation/os/process.md)
+    * [processor_scheduling](foundation/os/processor_scheduling.md)
 * [C 语言项目](c/index.md)
   * [git 源码阅读](c/git/index.md)
     * [数据结构]()
