@@ -13,6 +13,8 @@
   * [IP](foundation/tcp/index.md)
     * [IP 地址概述](foundation/ip/ip_addr.md)
     * [IP 协议](foundation/ip/internet_protocol.md)
+    * [ARP](foundation/ip/arp.md)
+    * [DHCP 和自动配置](foundation/ip/dhcp_and_auto_config.md)
   * [TCP](foundation/tcp/index.md)
     * [TCP Conn Management](foundation/tcp/tcp-conn.md)
     * [TCP Retransmission](foundation/tcp/tcp_retransmission.md)
