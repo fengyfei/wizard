@@ -4,7 +4,8 @@
 
 **SSL**(Secure Sockets Layer) 安全套接层，是一种安全协议，经历了 SSL 1.0、2.0、3.0 版本后发展成了标准安全协议 - **TLS**(Transport Layer Security) 传输层安全性协议。TLS 有 1.0 (RFC 2246)、1.1(RFC 4346)、1.2(RFC 5246)、1.3(1.3 在 3.26 号正式被批准) 版本。
 
-TLS 在实现上分为 **记录层** 和 **握手层** 两层，其中握手层又含四个子协议: 握手协议（handshake protoco 协议（change cipher spec protocol）、应用数据协议（application data protocol）和警报协议（alert protocol）
+TLS 在实现上分为 **记录层** 和 **握手层** 两层，其中握手层又含四个子协议: 握手协议（handshake protocol）、
+更改加密规范协议（change cipher spec protocol）、应用数据协议（application data protocol）和警告协议（alert protocol）
 
 ![image](images/tls.png)
 

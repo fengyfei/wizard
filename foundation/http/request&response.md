@@ -63,7 +63,7 @@ HTTP/1.1 中 Host 和 Request-URI 一起作为 Request 消息接收者判断请�
 
 ### URI(统一资源标识符，Uniform Resource Identifier)
 
-URI 就是由某个协议方案表示的资源的定位标识符，这个协议可以使 htpp、https、ftp 等，比如：
+URI 就是由某个协议方案表示的资源的定位标识符，这个协议可以使 http、https、ftp 等，比如：
 ```
 ftp://ftp.is.co.za/rfc/rfc1808.txt
 http://www.ietf.org/rfc/rfc2396.txt

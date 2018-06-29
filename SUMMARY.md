@@ -34,6 +34,7 @@
   * [Database](foundation/database/index.md)
     * [Tree](foundation/database/basic-tree.md)
     * [Hash](foundation/database/basic-hash.md)
+    * [Distribution](foundation/database/distribution.md)
   * [OS](foundation/os/index.md)
     * [process](foundation/os/process.md)
     * [processor_scheduling](foundation/os/processor_scheduling.md)
